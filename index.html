@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Keep Going - 凯圣王碳循环计划</title>
+  <script src="food_db.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --green:#4CAF50;--green-light:#E8F5E9;--green-dark:#388E3C;
+      --orange:#FF9800;--orange-light:#FFF3E0;
+      --red:#F44336;--red-light:#FFEBEE;
+      --bg:#F5F7F5;--card:#FFF;--text:#333;--sub:#888;--border:#E8E8E8;
+      --yellow:#FFC107;--yellow-light:#FFFDE7;
+      --blue:#2196F3;--blue-light:#E3F2FD;
+    }
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;
+      background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;
+      padding-bottom:70px;min-height:100vh;-webkit-tap-highlight-color:transparent;
+    }
+    ::-webkit-scrollbar{display:none}
+
+    /* === HEADER === */
+    .header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;
+      background:var(--card);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
+    .header h1{font-size:17px;font-weight:700;flex:1;text-align:center}
+    .header-icon{width:28px;font-size:20px;cursor:pointer}
+
+    /* === TABS === */
+    .page-tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border)}
+    .page-tab{flex:1;text-align:center;padding:10px 0;font-size:14px;color:var(--sub);
+      cursor:pointer;border-bottom:2px solid transparent;transition:.2s}
+    .page-tab.active{color:var(--green-dark);font-weight:600;border-bottom-color:var(--green)}
+    .page{display:none}.page.active{display:block}
+
+    /* === SETUP CARD === */
+    .card{background:var(--card);margin:10px 12px;border-radius:12px;padding:14px 16px;
+      box-shadow:0 1px 3px rgba(0,0,0,.05)}
+    .card-title{font-size:15px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+    .form-row{display:flex;gap:10px;margin-bottom:10px}
+    .form-group{flex:1;display:flex;flex-direction:column;gap:3px}
+    .form-group label{font-size:12px;color:var(--sub)}
+    .form-group select,.form-group input{padding:8px 10px;border:1px solid var(--border);
+      border-radius:8px;font-size:14px;background:#FAFAFA;width:100%}
+    .btn-primary{width:100%;padding:11px;background:linear-gradient(135deg,var(--green),var(--green-dark));
+      color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer}
+    .btn-primary:active{opacity:.8}
+
+    /* === COEFF EDITOR === */
+    .coeff-section{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
+    .coeff-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:13px}
+    .coeff-row label{color:var(--sub);flex:1}
+    .coeff-row input{width:70px;text-align:center;padding:4px 6px;border:1px solid var(--border);
+      border-radius:6px;font-size:14px;font-weight:600}
+    .coeff-row .unit{font-size:12px;color:var(--sub);margin-left:4px;width:42px}
+
+    /* === CYCLE EDITOR === */
+    .cycle-row{display:flex;gap:4px;overflow-x:auto;padding:2px 0;-webkit-overflow-scrolling:touch}
+    .cycle-day{min-width:46px;height:44px;border-radius:8px;border:1.5px solid var(--border);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;
+      font-size:11px;gap:1px;flex-shrink:0;transition:.15s}
+    .cycle-day .wd{font-weight:600;font-size:12px}
+    .cycle-day.high{border-color:var(--orange);background:var(--orange-light);color:var(--orange)}
+    .cycle-day.mid{border-color:var(--green);background:var(--green-light);color:var(--green-dark)}
+    .cycle-day.low{border-color:var(--blue);background:var(--blue-light);color:var(--blue)}
+    .cycle-day.active{box-shadow:0 0 0 2px rgba(76,175,80,.4)}
+    .cycle-picker{display:flex;gap:6px;margin-top:8px}
+    .cycle-pick-btn{flex:1;padding:6px;border-radius:8px;border:1px solid var(--border);
+      font-size:12px;text-align:center;cursor:pointer;font-weight:600}
+    .cycle-pick-btn.high{background:var(--orange-light);color:var(--orange);border-color:var(--orange)}
+    .cycle-pick-btn.mid{background:var(--green-light);color:var(--green-dark);border-color:var(--green)}
+    .cycle-pick-btn.low{background:var(--blue-light);color:var(--blue);border-color:var(--blue)}
+
+    /* === PLAN TITLE === */
+    .plan-header{text-align:center;padding:4px 0}
+    .plan-header h2{font-size:18px}
+    .day-tag{display:inline-block;padding:3px 14px;border-radius:20px;font-size:12px;font-weight:600;margin-top:6px}
+    .day-tag.high{background:var(--orange-light);color:var(--orange)}
+    .day-tag.mid{background:var(--green-light);color:var(--green-dark)}
+    .day-tag.low{background:var(--blue-light);color:var(--blue)}
+
+    /* === DAY SELECTOR === */
+    .day-selector{display:flex;gap:4px;padding:10px 0 4px}
+    .day-btn{flex:1;min-width:0;padding:6px 0;border-radius:8px;border:1.5px solid var(--border);
+      font-size:11px;cursor:pointer;background:#fff;text-align:center;transition:.15s}
+    .day-btn .dow{font-weight:600;font-size:12px}
+    .day-btn .dtype{font-size:10px;opacity:.7}
+    .day-btn.high{border-color:var(--orange);color:var(--orange)}
+    .day-btn.mid{border-color:var(--green);color:var(--green-dark)}
+    .day-btn.low{border-color:var(--blue);color:var(--blue)}
+    .day-btn.active.high{background:var(--orange);color:#fff}
+    .day-btn.active.mid{background:var(--green);color:#fff}
+    .day-btn.active.low{background:var(--blue);color:#fff}
+
+    /* === DASHBOARD (light) === */
+    .dash-card{background:var(--card);margin:10px 12px;border-radius:14px;padding:0;overflow:hidden;
+      box-shadow:0 1px 4px rgba(0,0,0,.06)}
+    .dash-top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px}
+    .dash-cal{font-size:14px;color:var(--sub)}
+    .dash-cal b{font-size:22px;font-weight:700;color:var(--text);margin:0 2px}
+    .dash-day-badge{padding:4px 16px;border-radius:20px;font-size:12px;font-weight:600;
+      border:1.5px solid}
+    .dash-day-badge.high{border-color:var(--orange);color:var(--orange);background:var(--orange-light)}
+    .dash-day-badge.mid{border-color:var(--green);color:var(--green-dark);background:var(--green-light)}
+    .dash-day-badge.low{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+    .dash-macros{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 12px 14px}
+    .dash-macro{border-radius:10px;padding:12px 6px;text-align:center}
+    .dm-protein{background:#F5F0E0}
+    .dm-carb{background:#E8EAF6}
+    .dm-fat{background:#FCE4EC}
+    .dm-water{background:#E0F2F1}
+    .dm-label{font-size:11px;color:var(--sub);margin-bottom:4px}
+    .dm-val{font-size:12px;color:var(--sub)}
+    .dm-val b{font-size:16px;font-weight:700;color:var(--text)}
+    .dm-pct{font-size:10px;color:#AAA;margin-top:2px}
+    .dm-bar{height:3px;background:#E0E0E0;border-radius:2px;margin-top:6px;overflow:hidden}
+    .dm-bar-fill{height:100%;border-radius:2px;transition:width .4s ease;width:0}
+    .dm-protein .dm-bar-fill{background:#C4A34D}
+    .dm-carb .dm-bar-fill{background:#5C6BC0}
+    .dm-fat .dm-bar-fill{background:#E57388}
+    .dm-water .dm-bar-fill{background:#26A69A}
+
+    /* === MEAL SECTION === */
+    .meal-card{background:var(--card);margin:10px 12px;border-radius:12px;overflow:hidden;
+      box-shadow:0 1px 3px rgba(0,0,0,.05)}
+    .meal-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer}
+    .meal-hd-left{display:flex;align-items:center;gap:6px}
+    .meal-hd h3{font-size:15px;font-weight:600}
+    .meal-macros{display:flex;gap:5px;font-size:10px}
+    .meal-macros span{padding:2px 7px;border-radius:10px}
+    .mc{background:var(--green-light);color:var(--green-dark)}
+    .mp{background:var(--orange-light);color:var(--orange)}
+    .mf{background:var(--yellow-light);color:#E65100}
+    .meal-arrow{font-size:10px;color:var(--sub);transition:.3s}.meal-arrow.open{transform:rotate(180deg)}
+    .meal-body{padding:0 14px 14px}.meal-body.hide{display:none}
+
+    /* === FOOD CATEGORY === */
+    .food-cat{margin-bottom:10px}
+    .food-cat-hd{font-size:12px;color:var(--sub);margin-bottom:6px;display:flex;align-items:center;gap:4px}
+    .food-tags{display:flex;gap:6px;flex-wrap:wrap}
+    .food-tag{padding:5px 12px;border:1px solid var(--border);border-radius:16px;font-size:12px;
+      cursor:pointer;background:#fff;transition:.15s;white-space:nowrap}
+    .food-tag.sel{background:var(--green-light);border-color:var(--green);color:var(--green-dark);font-weight:500}
+    .food-tag.add{border-style:dashed;border-color:var(--green);color:var(--green)}
+    .food-tag.custom{background:#FFF3E0;border-color:var(--orange);color:var(--orange)}
+    .food-tag.custom.sel{background:var(--orange);color:#fff}
+    .food-tag .del-x{margin-left:3px;font-size:10px;color:var(--red);font-weight:700}
+
+    /* === FOOD ITEM === */
+    .food-item{background:#F8FAF8;border-radius:10px;padding:10px 12px;margin-top:8px}
+    .fi-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .fi-name{font-size:14px;font-weight:600;display:flex;align-items:center;gap:5px}
+    .fi-wt{display:flex;align-items:baseline;gap:2px}
+    .fi-wt b{font-size:17px;color:var(--green-dark)}.fi-wt small{font-size:12px;color:var(--sub)}
+    .fi-ctrls{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+    .fi-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);
+      background:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .fi-btn:active{background:var(--green-light)}
+    .fi-step{font-size:10px;color:var(--sub)}
+    .fi-input{width:48px;text-align:center;border:1px solid var(--border);border-radius:6px;
+      padding:3px;font-size:14px;font-weight:600}
+    .fi-macros{display:flex;gap:10px;font-size:11px;color:var(--sub)}
+    .fi-macros span{display:flex;align-items:center;gap:2px}
+    .dot{width:5px;height:5px;border-radius:50%;display:inline-block}
+    .dot.c{background:var(--green)}.dot.p{background:var(--orange)}.dot.f{background:var(--yellow)}
+    .fi-del{color:var(--red);font-size:16px;cursor:pointer;padding:0 4px;margin-left:6px}
+
+    /* === VEGGIE/PROTEIN HINT === */
+    .hint-row{font-size:11px;color:var(--sub);padding:6px 0;border-top:1px dashed var(--border);margin-top:6px}
+
+    /* === DAILY SUMMARY === */
+    .tip-bar{background:var(--green-light);padding:7px 10px;border-radius:8px;
+      font-size:12px;text-align:center;color:var(--green-dark);margin:0}
+
+    /* === WEIGHT PAGE === */
+    .wt-header{text-align:center;padding:16px 0 8px}
+    .wt-header .period{color:var(--green-dark);font-size:14px;font-weight:600;
+      border:1px solid var(--green);border-radius:16px;padding:3px 16px;display:inline-block;margin-bottom:12px}
+    .wt-input-card{border:2px solid var(--orange);border-radius:12px;padding:14px;margin-bottom:8px}
+    .wt-input-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .wt-date{font-size:15px;font-weight:500;display:flex;align-items:center;gap:6px}
+    .wt-day-badge{background:var(--orange);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600}
+    .wt-kg{font-size:28px;font-weight:700;color:var(--text)}
+    .wt-kg small{font-size:14px;font-weight:400;color:var(--sub)}
+    .wt-note{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:4px}
+    .wt-input-area{display:flex;gap:8px;align-items:center}
+    .wt-input-area input{flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;
+      font-size:16px;font-weight:600}
+    .wt-input-area button{padding:10px 16px;background:var(--green);color:#fff;border:none;
+      border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+    .wt-record{background:var(--card);border-radius:12px;padding:14px;margin-bottom:8px;
+      box-shadow:0 1px 3px rgba(0,0,0,.05)}
+    .wt-record .wt-date{font-size:14px}.wt-record .wt-kg{font-size:24px}
+    .wt-change{font-size:12px;margin-left:8px;font-weight:500}
+    .wt-change.up{color:var(--red)}.wt-change.down{color:var(--green)}
+    .wt-empty{text-align:center;padding:40px;color:var(--sub);font-size:13px}
+
+    /* === TREND / TIPS === */
+    .trend-box{background:#FAFAFA;border-radius:10px;padding:30px 16px;text-align:center;
+      color:var(--sub);font-size:13px;margin:8px 0}
+    .tips-list{padding-left:18px;font-size:12px;line-height:1.9;color:#555}
+    .btn-record{display:block;width:100%;padding:9px;margin-top:8px;background:#fff;
+      border:1px solid var(--green);color:var(--green);border-radius:20px;font-size:13px;cursor:pointer}
+    .btn-floating{display:block;margin:14px auto;padding:11px 36px;
+      background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;
+      border:none;border-radius:22px;font-size:15px;font-weight:600;cursor:pointer;
+      box-shadow:0 3px 10px rgba(76,175,80,.3)}
+
+    /* === BOTTOM NAV === */
+    .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;
+      max-width:430px;background:var(--card);border-top:1px solid var(--border);
+      display:flex;justify-content:space-around;padding:6px 0 env(safe-area-inset-bottom,6px);z-index:100}
+    .nav-item{text-align:center;font-size:10px;color:var(--sub);cursor:pointer;flex:1;padding:3px 0}
+    .nav-item.active{color:var(--green)}
+    .nav-icon{font-size:18px;margin-bottom:1px}
+
+    /* === MODAL === */
+    .modal-bg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;
+      background:rgba(0,0,0,.4);z-index:200;justify-content:center;align-items:flex-end}
+    .modal-bg.show{display:flex}
+    .modal-box{background:#fff;width:100%;max-width:430px;border-radius:14px 14px 0 0;
+      padding:18px;animation:slideUp .25s}
+    @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .fade-in{animation:fadeIn .35s ease-out}
+
+    /* === SEARCH FOOD MODAL === */
+    .search-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;
+      background:var(--bg);max-width:430px;margin:0 auto;flex-direction:column}
+    .search-modal.show{display:flex}
+    .search-top{background:var(--card);padding:10px 12px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:1}
+    .search-back{font-size:22px;cursor:pointer;padding:4px;color:var(--sub)}
+    .search-input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:20px;
+      font-size:14px;background:#F5F5F5;outline:none}
+    .search-input:focus{border-color:var(--green);background:#fff}
+    .search-cat-bar{display:flex;gap:6px;padding:8px 12px;overflow-x:auto;background:var(--card);
+      border-bottom:1px solid var(--border);white-space:nowrap}
+    .search-cat-btn{padding:5px 12px;border-radius:16px;font-size:12px;cursor:pointer;
+      border:1px solid var(--border);background:#fff;color:var(--sub);flex-shrink:0;transition:.15s}
+    .search-cat-btn.active{background:var(--green);color:#fff;border-color:var(--green)}
+    .search-results{flex:1;overflow-y:auto;padding:6px 12px;-webkit-overflow-scrolling:touch}
+    .search-group-title{font-size:12px;color:var(--sub);padding:8px 0 4px;font-weight:600;
+      position:sticky;top:0;background:var(--bg)}
+    .search-item{display:flex;align-items:center;justify-content:space-between;
+      background:var(--card);border-radius:10px;padding:10px 12px;margin-bottom:6px;
+      cursor:pointer;transition:.15s;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+    .search-item:active{background:var(--green-light)}
+    .search-item.added{border:1.5px solid var(--green);background:#F0FFF0}
+    .si-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+    .si-emoji{font-size:20px;flex-shrink:0}
+    .si-info{min-width:0}
+    .si-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .si-macros{font-size:11px;color:var(--sub);display:flex;gap:6px;margin-top:2px}
+    .si-kcal{font-size:13px;font-weight:600;color:var(--orange);flex-shrink:0;margin-left:8px}
+    .si-add{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--green);
+      color:var(--green);font-size:18px;display:flex;align-items:center;justify-content:center;
+      flex-shrink:0;margin-left:6px;font-weight:300}
+    .search-item.added .si-add{background:var(--green);color:#fff}
+    .search-empty{text-align:center;padding:40px 20px;color:var(--sub);font-size:13px}
+    .search-count{text-align:center;padding:4px;font-size:11px;color:var(--sub)}
+
+    /* === TRAINING SECTION === */
+    .train-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+    .train-tag{padding:6px 14px;border:1.5px solid var(--border);border-radius:18px;font-size:13px;
+      cursor:pointer;background:#fff;transition:.15s;user-select:none}
+    .train-tag.sel{background:var(--green);color:#fff;border-color:var(--green);font-weight:500}
+    .train-tag.custom-tag{border-style:dashed;border-color:var(--orange);color:var(--orange)}
+    .train-tag.custom-tag.sel{background:var(--orange);color:#fff;border-style:solid}
+    .train-tag .tag-del{margin-left:4px;font-size:10px;opacity:.7}
+    .train-custom-row{display:flex;gap:6px;margin-bottom:8px}
+    .train-custom-input{flex:1;padding:7px 12px;border:1px solid var(--border);border-radius:8px;
+      font-size:13px;background:#FAFAFA}
+    .train-custom-add{padding:7px 14px;background:var(--green);color:#fff;border:none;
+      border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+    .train-custom-add:active{opacity:.8}
+    .train-selected{font-size:12px;color:var(--sub);min-height:18px}
+    .train-selected b{color:var(--green-dark)}
+
+    /* === POOP SECTION === */
+    .poop-selector{display:flex;gap:8px;flex-wrap:wrap}
+    .poop-btn{padding:8px 18px;border:1.5px solid var(--border);border-radius:18px;font-size:13px;
+      cursor:pointer;background:#fff;transition:.15s;user-select:none;display:flex;align-items:center;gap:4px}
+    .poop-btn.sel{background:#FFF3E0;border-color:var(--orange);color:var(--orange);font-weight:600}
+
+    /* === CHECK-IN FAB === */
+    .checkin-fab{position:fixed;right:16px;bottom:80px;width:52px;height:52px;border-radius:50%;
+      background:linear-gradient(135deg,#FF9800,#F57C00);color:#fff;border:none;
+      box-shadow:0 4px 14px rgba(255,152,0,.4);cursor:pointer;z-index:99;
+      display:flex;align-items:center;justify-content:center;font-size:22px;transition:.2s}
+    .checkin-fab:active{transform:scale(.92)}
+
+    /* === CHECK-IN PANEL === */
+    .checkin-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;
+      background:rgba(0,0,0,.45);z-index:201;justify-content:center;align-items:flex-end}
+    .checkin-overlay.show{display:flex}
+    .checkin-panel{background:#fff;width:100%;max-width:430px;border-radius:16px 16px 0 0;
+      padding:20px 16px env(safe-area-inset-bottom,16px);animation:slideUp .3s;
+      max-height:85vh;overflow-y:auto}
+    .checkin-title{font-size:18px;font-weight:700;text-align:center;margin-bottom:4px}
+    .checkin-date{text-align:center;font-size:13px;color:var(--sub);margin-bottom:16px}
+    .checkin-section{margin-bottom:14px}
+    .checkin-section-hd{font-size:14px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+    .checkin-row{display:flex;align-items:center;justify-content:space-between;
+      padding:8px 12px;background:#F8FAF8;border-radius:8px;margin-bottom:6px;font-size:13px}
+    .checkin-row label{color:var(--sub);flex:1}
+    .checkin-row .cr-val{font-size:16px;font-weight:700;min-width:50px;text-align:right}
+    .checkin-row .cr-val.up{color:var(--red)}.checkin-row .cr-val.down{color:var(--green)}
+    .checkin-row .cr-val.neutral{color:var(--text)}
+    .checkin-row input{width:80px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;
+      font-size:14px;text-align:center;font-weight:600}
+    .checkin-divider{display:flex;align-items:center;gap:8px;margin:12px 0;font-size:12px;color:var(--sub)}
+    .checkin-divider::before,.checkin-divider::after{content:'';flex:1;border-top:1px dashed var(--border)}
+    .checkin-meal-summary{background:#F8FAF8;border-radius:10px;padding:10px 12px;margin-bottom:6px}
+    .checkin-meal-name{font-size:13px;font-weight:600;margin-bottom:4px}
+    .checkin-meal-foods{font-size:12px;color:var(--sub);line-height:1.6}
+    .checkin-meal-macros{display:flex;gap:8px;font-size:11px;margin-top:4px}
+    .checkin-meal-macros span{padding:2px 6px;border-radius:8px}
+    .checkin-exercise{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;
+      font-size:13px;background:#FAFAFA;resize:none;height:60px}
+    .checkin-poop{display:flex;gap:8px;flex-wrap:wrap}
+    .checkin-poop-btn{padding:6px 14px;border:1px solid var(--border);border-radius:16px;
+      font-size:12px;cursor:pointer;background:#fff;transition:.15s}
+    .checkin-poop-btn.sel{background:var(--orange-light);border-color:var(--orange);color:var(--orange)}
+    .checkin-submit{width:100%;padding:12px;background:linear-gradient(135deg,#FF9800,#F57C00);
+      color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px}
+    .checkin-submit:active{opacity:.8}
+    .checkin-preview{background:#FFFDE7;border:1px solid #FFF9C4;border-radius:10px;
+      padding:12px;margin-top:12px;font-size:12px;line-height:1.8;white-space:pre-wrap;color:#555}
+    .checkin-preview-title{font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);
+      display:flex;align-items:center;justify-content:space-between}
+    .checkin-copy{padding:4px 10px;border:1px solid var(--green);color:var(--green);
+      border-radius:6px;font-size:11px;cursor:pointer;background:#fff}
+    .checkin-copy:active{background:var(--green-light)}
+    .checkin-divider-edit{display:flex;align-items:center;margin:12px 0 4px;gap:6px}
+    .ck-divider-input{flex:1;border:none;border-bottom:1px dashed var(--border);background:transparent;
+      text-align:center;font-size:13px;color:var(--sub);padding:6px 4px;outline:none}
+    .ck-divider-input:focus{border-bottom-color:var(--green);color:var(--text)}
+    /* emoji picker */
+    .ck-emoji{cursor:pointer;font-size:16px;user-select:none;padding:2px;border-radius:4px;transition:.1s}
+    .ck-emoji:hover{background:#F0F0F0}
+    .emoji-picker{display:none;position:absolute;background:#fff;border:1px solid var(--border);
+      border-radius:10px;padding:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:210;
+      width:260px;max-height:200px;overflow-y:auto}
+    .emoji-picker.show{display:block}
+    .emoji-picker-grid{display:flex;flex-wrap:wrap;gap:4px}
+    .emoji-pick{width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+      font-size:18px;cursor:pointer;border-radius:6px;transition:.1s}
+    .emoji-pick:hover{background:var(--green-light)}
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <span class="header-icon">&#x2630;</span>
+  <h1>Keep Going</h1>
+  <span class="header-icon">&#x2699;</span>
+</div>
+
+<!-- Page Tabs -->
+<div class="page-tabs">
+  <div class="page-tab active" onclick="switchPage('plan')">碳循环计划</div>
+  <div class="page-tab" onclick="switchPage('weight')">体重记录</div>
+</div>
+
+<!-- ==================== PAGE: PLAN ==================== -->
+<div class="page active" id="pagePlan">
+
+  <!-- Setup -->
+  <div class="card" id="setupCard">
+    <div class="card-title">&#x1F4CB; 个人信息与系数设置</div>
+    <div class="form-row">
+      <div class="form-group"><label>体重 (kg)</label>
+        <input type="number" id="inWeight" value="70" min="30" max="200" step="0.5"></div>
+      <div class="form-group"><label>性别</label>
+        <select id="inGender"><option value="male">男</option><option value="female">女</option></select></div>
+      <div class="form-group"><label>体型</label>
+        <select id="inBody" onchange="updateCoeffDefaults()">
+          <option value="endo">内胚型</option><option value="meso">中胚型</option><option value="ecto">外胚型</option>
+        </select></div>
+    </div>
+
+    <!-- Custom Coefficients -->
+    <div class="coeff-section">
+      <div style="font-size:12px;color:var(--sub);margin-bottom:6px">&#x2699; 营养素计算系数（可自定义调整）</div>
+      <div class="coeff-row"><label>碳水基准</label><input type="number" id="cfCarb" value="2.0" step="0.1" min="0.5" max="5"><span class="unit">g/kg</span></div>
+      <div class="coeff-row"><label>脂肪基准</label><input type="number" id="cfFat" value="0.8" step="0.1" min="0.2" max="3"><span class="unit">g/kg</span></div>
+      <div class="coeff-row"><label>蛋白质系数</label><input type="number" id="cfProtein" value="1.3" step="0.1" min="0.8" max="3"><span class="unit">g/kg</span></div>
+    </div>
+
+    <!-- Custom Cycle -->
+    <div class="coeff-section">
+      <div style="font-size:12px;color:var(--sub);margin-bottom:8px">&#x1F504; 一周循环顺序（点击日期切换类型）</div>
+      <div class="cycle-row" id="cycleEditor"></div>
+      <div class="cycle-picker">
+        <div class="cycle-pick-btn high" onclick="setCycleType('high')">高碳</div>
+        <div class="cycle-pick-btn mid" onclick="setCycleType('mid')">中碳</div>
+        <div class="cycle-pick-btn low" onclick="setCycleType('low')">低碳</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="generatePlan()" style="margin-top:14px">生成碳循环计划</button>
+  </div>
+
+  <!-- Plan Content (generated) -->
+  <div id="planContent" style="display:none">
+    <div class="card fade-in">
+      <div class="plan-header">
+        <h2>凯圣王·碳循环计划</h2>
+        <div class="day-tag" id="dayTag">高碳日</div>
+        <div class="day-selector" id="daySelector"></div>
+      </div>
+    </div>
+    <!-- Dark Dashboard -->
+    <div class="dash-card fade-in">
+      <div class="dash-top">
+        <div class="dash-cal">已进食 <b id="dEaten">0</b>/<span id="dTotal">0</span> 大卡</div>
+        <div class="dash-day-badge" id="dDayBadge">高碳日</div>
+      </div>
+      <div class="dash-macros">
+        <div class="dash-macro dm-protein">
+          <div class="dm-label">蛋白 (g)</div>
+          <div class="dm-val"><b id="dmProteinC">0</b> / <span id="dmProteinT">0</span></div>
+          <div class="dm-pct" id="dmProteinP">0%</div>
+          <div class="dm-bar"><div class="dm-bar-fill" id="dmProteinBar"></div></div>
+        </div>
+        <div class="dash-macro dm-carb">
+          <div class="dm-label">碳水 (g)</div>
+          <div class="dm-val"><b id="dmCarbC">0</b> / <span id="dmCarbT">0</span></div>
+          <div class="dm-pct" id="dmCarbP">0%</div>
+          <div class="dm-bar"><div class="dm-bar-fill" id="dmCarbBar"></div></div>
+        </div>
+        <div class="dash-macro dm-fat">
+          <div class="dm-label">脂肪 (g)</div>
+          <div class="dm-val"><b id="dmFatC">0</b> / <span id="dmFatT">0</span></div>
+          <div class="dm-pct" id="dmFatP">0%</div>
+          <div class="dm-bar"><div class="dm-bar-fill" id="dmFatBar"></div></div>
+        </div>
+        <div class="dash-macro dm-water">
+          <div class="dm-label">饮水 (ml)</div>
+          <div class="dm-val"><b id="dmWaterC">0</b> / 2500</div>
+          <div class="dm-pct" id="dmWaterP">0%</div>
+          <div class="dm-bar"><div class="dm-bar-fill" id="dmWaterBar"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Training (moved here) -->
+    <div class="card fade-in">
+      <div class="card-title">&#x1F4AA; 今日训练</div>
+      <div class="train-tags" id="trainTags"></div>
+      <div class="train-custom-row">
+        <input class="train-custom-input" id="trainCustomInput" type="text" placeholder="添加自定义训练内容...">
+        <button class="train-custom-add" onclick="addCustomTrain()">添加</button>
+      </div>
+      <div class="train-selected" id="trainSelected"></div>
+    </div>
+
+    <!-- Meals -->
+    <div id="mealsBox"></div>
+
+    <!-- Tip Bar -->
+    <div class="card fade-in">
+      <div class="tip-bar" id="tipBar">&#x2705; 营养素分配均衡！</div>
+    </div>
+
+    <!-- Poop Record -->
+    <div class="card fade-in">
+      <div class="card-title">&#x1F4A9; 便便记录</div>
+      <div class="poop-selector" id="poopSelector"></div>
+    </div>
+
+    <!-- Trend -->
+    <div class="card fade-in">
+      <div class="card-title">&#x1F4C8; 趋势分析</div>
+      <div class="trend-box"><div style="font-size:22px;margin-bottom:6px">&#x1F50D; 观察中</div><p>完成更多天饮食记录后自动生成趋势图</p></div>
+      <button class="btn-record" onclick="switchPage('weight')">记录今天饮食数据</button>
+    </div>
+
+    <!-- Tips -->
+    <div class="card fade-in">
+      <div class="card-title">&#x1F4A1; 温馨提示</div>
+      <ol class="tips-list">
+        <li>炒菜油脂需计算：牛油果油、山茶油、椰子油、橄榄油，每5g约4.5g脂肪</li>
+        <li>无法估计烹饪中有多少脂肪的情况下，每餐多补充5g脂肪在总计数里</li>
+        <li>蛋白质全程不变，保证肌肉不流失</li>
+        <li>高碳日必须配合大重量训练</li>
+        <li>低碳日不要做高强度有氧</li>
+        <li>蔬菜每天 ≥ 500g，饮水 ≥ 2.5L</li>
+        <li>不喝酒、不喝含糖饮料，睡前3小时不大量进食</li>
+      </ol>
+    </div>
+
+    <button class="btn-floating" onclick="alert('饮食记录已保存！')">&#x1F4DD; 提交饮食记录</button>
+  </div>
+</div>
+
+<!-- ==================== PAGE: WEIGHT ==================== -->
+<div class="page" id="pageWeight">
+  <div class="card">
+    <div class="wt-header">
+      <div class="period" id="wtPeriod">第 1 周期</div>
+      <div style="font-size:13px;color:var(--sub);margin-bottom:10px">&#x1F504; 切换凯圣王碳循环计划</div>
+    </div>
+    <div style="font-size:13px;color:var(--sub);margin-bottom:6px">记录今日体重</div>
+    <div class="wt-input-area">
+      <input type="number" id="wtInput" placeholder="输入体重 kg" step="0.01">
+      <button onclick="addWeight()">记录</button>
+    </div>
+  </div>
+  <div id="wtRecords"></div>
+  <div class="wt-empty" id="wtEmpty">暂无记录，开始记录你的第一条体重吧！</div>
+</div>
+
+<!-- Check-in FAB -->
+<button class="checkin-fab" onclick="openCheckin()" title="饮食打卡">&#x1F4DD;</button>
+
+<!-- Check-in Panel -->
+<div class="checkin-overlay" id="checkinOverlay" onclick="if(event.target===this)closeCheckin()">
+  <div class="checkin-panel" id="checkinPanel">
+    <div class="checkin-title">&#x1F4C5; 每日打卡</div>
+    <div class="checkin-date" id="checkinDate"></div>
+
+    <!-- Weight Section -->
+    <div class="checkin-section">
+      <div class="checkin-section-hd">&#x1F464; 打卡人</div>
+      <div class="checkin-row"><label>姓名</label><input type="text" id="ckName" value="湉湉" style="width:80px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:14px;text-align:center"></div>
+    </div>
+
+    <div class="checkin-section" style="position:relative">
+      <div class="checkin-section-hd">&#x1F4CD; 体重数据</div>
+      <div class="checkin-row"><label><span class="ck-emoji" data-key="startW" onclick="openEmojiPicker(this)">🌱</span> 初始体重</label><span class="cr-val neutral" id="ckStartW">--</span><small>kg</small></div>
+      <div class="checkin-row"><label><span class="ck-emoji" data-key="goalW" onclick="openEmojiPicker(this)">🏋️</span> 目标体重</label><span class="cr-val neutral" id="ckGoalW">--</span><small>kg</small></div>
+      <div class="checkin-row"><label><span class="ck-emoji" data-key="yestW" onclick="openEmojiPicker(this)">🖼</span> 昨日体重</label><input type="number" id="ckYestW" placeholder="输入" step="0.01" style="width:80px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:14px;text-align:center;font-weight:600" oninput="updateCheckinCalc()"></div>
+      <div class="checkin-row"><label><span class="ck-emoji" data-key="todayW" onclick="openEmojiPicker(this)">🍊</span> 今日称重</label><input type="number" id="ckTodayW" placeholder="输入" step="0.01"></div>
+      <div class="checkin-row"><label><span class="ck-emoji" data-key="dayChange" onclick="openEmojiPicker(this)">📏</span> 体重幅度</label><span class="cr-val" id="ckDayChange">--</span><small>kg</small></div>
+      <!-- Emoji picker popup (shared) -->
+      <div class="emoji-picker" id="emojiPicker"></div>
+    </div>
+
+    <!-- Change Section -->
+    <div class="checkin-section" style="position:relative">
+      <div class="checkin-row"><label><span class="ck-emoji" data-key="cumChange" onclick="openEmojiPicker(this)">📉</span> 累计变化</label><span class="cr-val" id="ckCumChange">--</span><small>kg</small></div>
+      <div class="checkin-row"><label><span class="ck-emoji" data-key="toGoal" onclick="openEmojiPicker(this)">🎯</span> 距离目标</label><span class="cr-val" id="ckToGoal">--</span><small>kg</small></div>
+    </div>
+
+    <!-- Diet Section -->
+    <div class="checkin-divider-edit">
+      <input class="ck-divider-input" id="ckDivDiet" value="————🎪————" placeholder="饮食分隔线">
+    </div>
+    <div class="checkin-section" id="ckDietSection">
+      <div style="font-size:12px;color:var(--sub);text-align:center;padding:8px">生成计划后自动填充</div>
+    </div>
+
+    <!-- Exercise Section (read from plan page) -->
+    <div class="checkin-divider-edit">
+      <input class="ck-divider-input" id="ckDivTrain" value="————💪————" placeholder="训练分隔线">
+    </div>
+    <div class="checkin-section">
+      <div class="checkin-row" id="ckTrainSummary" style="flex-direction:column;align-items:flex-start;gap:4px">
+        <span style="color:var(--sub);font-size:12px">从碳循环计划页获取</span>
+      </div>
+    </div>
+
+    <!-- Poop Section (read from plan page) -->
+    <div class="checkin-divider-edit">
+      <input class="ck-divider-input" id="ckDivPoop" value="————💩————" placeholder="便便分隔线">
+    </div>
+    <div class="checkin-section">
+      <div class="checkin-row" id="ckPoopSummary">
+        <span style="color:var(--sub);font-size:12px">从碳循环计划页获取</span>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="checkin-preview" id="ckPreview" style="display:none">
+      <div class="checkin-preview-title">
+        <span>&#x1F4CB; 打卡预览</span>
+        <span class="checkin-copy" onclick="copyCheckin()">复制文本</span>
+      </div>
+      <div id="ckPreviewText"></div>
+    </div>
+
+    <button class="checkin-submit" onclick="submitCheckin()">&#x2705; 生成打卡 & 保存</button>
+  </div>
+</div>
+
+<!-- Search Food Modal -->
+<div class="search-modal" id="searchModal">
+  <div class="search-top">
+    <span class="search-back" onclick="closeSearch()">&#x2190;</span>
+    <input class="search-input" id="searchInput" type="text" placeholder="搜索食物名称..." oninput="doSearch()">
+  </div>
+  <div class="search-cat-bar" id="searchCatBar"></div>
+  <div class="search-results" id="searchResults"></div>
+</div>
+
+<!-- Bottom Nav -->
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="switchPage('plan')"><div class="nav-icon">&#x1F3E0;</div>首页</div>
+  <div class="nav-item" onclick="switchPage('weight')"><div class="nav-icon">&#x2696;</div>体重</div>
+  <div class="nav-item"><div class="nav-icon">&#x1F4CA;</div>统计</div>
+  <div class="nav-item"><div class="nav-icon">&#x1F464;</div>我的</div>
+</div>
+
+<script>
+// ============= CONSTANTS =============
+const BODY_DEFAULTS = {
+  endo: { carb: 2.0, fat: 0.8, protein: 1.3 },
+  meso: { carb: 2.5, fat: 0.9, protein: 1.5 },
+  ecto: { carb: 3.0, fat: 1.0, protein: 1.6 }
+};
+const CARB_DIST = { high: .50/2, mid: .35/3, low: .15/2 };
+const FAT_DIST  = { high: .15/2, mid: .35/3, low: .50/2 };
+const DNAMES = ['周一','周二','周三','周四','周五','周六','周日'];
+const DLABELS = { high:'高碳日', mid:'中碳日', low:'低碳日' };
+
+const FOODS = {
+  staple: [
+    { name:'糙米(生重)', emoji:'🍚', carb:73, protein:7.5, fat:2.7 },
+    { name:'红薯', emoji:'🍠', carb:21, protein:1.6, fat:0.1 },
+    { name:'燕麦', emoji:'🥣', carb:62, protein:13, fat:6.5 },
+    { name:'玉米', emoji:'🌽', carb:19, protein:3.3, fat:1.2 },
+    { name:'全麦面包', emoji:'🍞', carb:43, protein:9, fat:3.4 },
+    { name:'白米饭', emoji:'🍚', carb:25.6, protein:2.6, fat:0.3 },
+    { name:'馒头', emoji:'🫓', carb:47, protein:7, fat:1.1 },
+    { name:'紫薯', emoji:'🍠', carb:18, protein:1.3, fat:0.2 },
+  ],
+  protein: [
+    { name:'鸡胸肉', emoji:'🍗', carb:0, protein:24.6, fat:1.9 },
+    { name:'牛肉', emoji:'🥩', carb:0, protein:20.2, fat:10.2 },
+    { name:'鱼(鲈鱼)', emoji:'🐟', carb:0, protein:18.6, fat:3.4 },
+    { name:'虾仁', emoji:'🦐', carb:0.7, protein:18.6, fat:0.8 },
+    { name:'鸡蛋', emoji:'🥚', carb:1.5, protein:13, fat:10 },
+    { name:'蛋白(纯)', emoji:'🥚', carb:0.7, protein:11, fat:0.2 },
+    { name:'豆腐', emoji:'🧈', carb:2.7, protein:8, fat:3.7 },
+    { name:'三文鱼', emoji:'🐠', carb:0, protein:20, fat:13 },
+  ],
+  fat: [
+    { name:'牛油果', emoji:'🥑', carb:8.5, protein:2, fat:14.7 },
+    { name:'坚果(混合)', emoji:'🥜', carb:15, protein:18, fat:52 },
+    { name:'橄榄油', emoji:'🫒', carb:0, protein:0, fat:100 },
+    { name:'蛋黄', emoji:'🟡', carb:0.6, protein:15.9, fat:28.2 },
+    { name:'杏仁', emoji:'🌰', carb:10, protein:21, fat:50 },
+  ],
+  veggie: [
+    { name:'西蓝花', emoji:'🥦', carb:4.3, protein:3.5, fat:0.4 },
+    { name:'菠菜', emoji:'🥬', carb:3.6, protein:2.9, fat:0.4 },
+    { name:'黄瓜', emoji:'🥒', carb:2.9, protein:0.7, fat:0.1 },
+    { name:'番茄', emoji:'🍅', carb:3.9, protein:0.9, fat:0.2 },
+    { name:'芹菜', emoji:'🥬', carb:2, protein:0.7, fat:0.1 },
+    { name:'生菜', emoji:'🥗', carb:1.3, protein:1.3, fat:0.3 },
+  ]
+};
+
+// ============= STATE =============
+let cycle = ['high','mid','mid','low','mid','high','low'];
+let editCycleIdx = 0;
+let plan = null, curDay = 0, meals = [], water = 0;
+let weightRecords = JSON.parse(localStorage.getItem('wt_records') || '[]');
+// User's shortcut foods per category (added from food DB), persisted
+let userFoods = JSON.parse(localStorage.getItem('user_foods') || '{"staple":[],"protein":[],"fat":[],"veggie":[]}');
+let searchMealIdx = null; // which meal opened the search
+let searchCatIdx = null;  // which meal-category opened the search
+
+// ============= PAGE SWITCHING =============
+function switchPage(p) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.page-tab').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  if (p === 'plan') {
+    document.getElementById('pagePlan').classList.add('active');
+    document.querySelectorAll('.page-tab')[0].classList.add('active');
+    document.querySelectorAll('.nav-item')[0].classList.add('active');
+  } else {
+    document.getElementById('pageWeight').classList.add('active');
+    document.querySelectorAll('.page-tab')[1].classList.add('active');
+    document.querySelectorAll('.nav-item')[1].classList.add('active');
+    renderWeightRecords();
+  }
+}
+
+// ============= COEFF DEFAULTS =============
+function updateCoeffDefaults() {
+  const d = BODY_DEFAULTS[document.getElementById('inBody').value];
+  document.getElementById('cfCarb').value = d.carb;
+  document.getElementById('cfFat').value = d.fat;
+  document.getElementById('cfProtein').value = d.protein;
+}
+
+// ============= CYCLE EDITOR =============
+function renderCycleEditor() {
+  document.getElementById('cycleEditor').innerHTML = cycle.map((t, i) =>
+    `<div class="cycle-day ${t} ${i===editCycleIdx?'active':''}" onclick="editCycleIdx=${i};renderCycleEditor()">
+      <span class="wd">${DNAMES[i]}</span><span>${DLABELS[t].replace('日','')}</span></div>`
+  ).join('');
+}
+function setCycleType(t) { cycle[editCycleIdx] = t; renderCycleEditor(); }
+
+// ============= GENERATE PLAN =============
+function generatePlan() {
+  const w = parseFloat(document.getElementById('inWeight').value);
+  if (!w || w < 30 || w > 200) { alert('请输入有效体重'); return; }
+  const carbBase = parseFloat(document.getElementById('cfCarb').value);
+  const fatBase = parseFloat(document.getElementById('cfFat').value);
+  const protCoeff = parseFloat(document.getElementById('cfProtein').value);
+  const wkCarb = carbBase * w * 7;
+  const wkFat = fatBase * w * 7;
+  const dProt = Math.round(w * protCoeff);
+
+  const days = cycle.map((type, i) => {
+    const carb = Math.round(wkCarb * CARB_DIST[type]);
+    const fat = Math.round(wkFat * FAT_DIST[type]);
+    const cal = Math.round(carb * 4 + dProt * 4 + fat * 9);
+    return { type, carb, fat, protein: dProt, cal, name: DNAMES[i] };
+  });
+  plan = { weight: w, days, wkCarb, wkFat, dProt };
+  document.getElementById('setupCard').style.display = 'none';
+  document.getElementById('planContent').style.display = 'block';
+  renderDaySel();
+  selectDay(0);
+}
+
+// ============= DAY SELECTOR =============
+function renderDaySel() {
+  document.getElementById('daySelector').innerHTML = plan.days.map((d, i) =>
+    `<div class="day-btn ${d.type} ${i===curDay?'active':''}" onclick="selectDay(${i})">
+      <div class="dow">${d.name}</div><div class="dtype">${DLABELS[d.type]}</div></div>`
+  ).join('');
+}
+
+function selectDay(i) {
+  curDay = i;
+  const d = plan.days[i];
+  const tag = document.getElementById('dayTag');
+  tag.textContent = DLABELS[d.type];
+  tag.className = 'day-tag ' + d.type;
+  document.querySelectorAll('.day-btn').forEach((b, j) => b.classList.toggle('active', j===i));
+  // Dashboard
+  const badge = document.getElementById('dDayBadge');
+  badge.textContent = DLABELS[d.type];
+  badge.className = 'dash-day-badge ' + d.type;
+  document.getElementById('dTotal').textContent = d.cal;
+  document.getElementById('dmProteinT').textContent = d.protein;
+  document.getElementById('dmCarbT').textContent = d.carb;
+  document.getElementById('dmFatT').textContent = d.fat;
+  buildMeals(d);
+  renderMeals();
+  updateSummary();
+}
+
+// ============= MEALS =============
+const MEAL_CFG = [
+  { name:'早餐', icon:'🌅', ratio:.25 },
+  { name:'午餐', icon:'☀️', ratio:.40 },
+  { name:'晚餐', icon:'🌙', ratio:.35 }
+];
+
+function buildMeals(day) {
+  meals = MEAL_CFG.map((m, mi) => ({
+    ...m,
+    targetC: Math.round(day.carb * m.ratio),
+    targetP: Math.round(day.protein * m.ratio),
+    targetF: Math.round(day.fat * m.ratio),
+    foods: [], expanded: true,
+    sel: { staple: null, protein: null, fat: null, veggie: null }
+  }));
+  meals.forEach((m, mi) => {
+    selectFood(mi, 'staple', mi===0?6:(mi===1?0:5), true);
+    selectFood(mi, 'protein', mi===0?4:(mi===1?0:1), true);
+    selectFood(mi, 'veggie', mi, true);
+    if (plan.days[curDay].type === 'low' && mi > 0) selectFood(mi, 'fat', 0, true);
+  });
+}
+
+function getFood(cat, idx) {
+  const builtIn = FOODS[cat];
+  if (idx < builtIn.length) return builtIn[idx];
+  return (userFoods[cat]||[])[idx - builtIn.length];
+}
+
+function selectFood(mi, cat, idx, init) {
+  const meal = meals[mi];
+  const prev = meal.sel[cat];
+  if (prev === idx && !init) {
+    meal.foods = meal.foods.filter(f => !(f._cat === cat && f._idx === idx));
+    meal.sel[cat] = null;
+  } else {
+    meal.foods = meal.foods.filter(f => f._cat !== cat);
+    const food = getFood(cat, idx);
+    if (!food) return;
+    let w = 150;
+    if (cat === 'staple' && food.carb > 0) w = Math.max(50, Math.min(400, Math.round(meal.targetC / food.carb * 100)));
+    else if (cat === 'protein' && food.protein > 0) w = Math.max(50, Math.min(400, Math.round(meal.targetP / food.protein * 100)));
+    else if (cat === 'fat' && food.fat > 0) w = Math.max(10, Math.min(100, Math.round(meal.targetF / food.fat * 100 * .5)));
+    else w = 150;
+    meal.foods.push({ ...food, weight: w, _cat: cat, _idx: idx });
+    meal.sel[cat] = idx;
+  }
+  if (!init) { renderMeals(); updateSummary(); }
+}
+
+function mealMacro(mi, type) {
+  return Math.round(meals[mi].foods.reduce((s, f) => s + f[type] * f.weight / 100, 0) * 10) / 10;
+}
+function foodMacro(f, type) { return Math.round(f[type] * f.weight / 100 * 10) / 10; }
+
+function renderMeals() {
+  document.getElementById('mealsBox').innerHTML = meals.map((m, mi) => {
+    const mc = mealMacro(mi,'carb'), mp = mealMacro(mi,'protein'), mf = mealMacro(mi,'fat');
+    const mkcal = Math.round(mc*4+mp*4+mf*9);
+    return `<div class="meal-card fade-in">
+      <div class="meal-hd" onclick="toggleMeal(${mi})">
+        <div class="meal-hd-left"><span>${m.icon}</span><h3>${m.name}</h3></div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="meal-macros"><span class="mc">碳${mc}g</span><span class="mp">蛋${mp}g</span><span class="mf">脂${mf}g</span><span style="background:#FFF3E0;color:var(--orange);padding:2px 7px;border-radius:10px">${mkcal}kcal</span></div>
+          <span class="meal-arrow ${m.expanded?'open':''}">▼</span>
+        </div>
+      </div>
+      <div class="meal-body ${m.expanded?'':'hide'}" id="mb${mi}">
+        ${renderCat(mi, 'staple', '🍚 碳水来源')}
+        ${renderCat(mi, 'protein', '🥩 蛋白质来源')}
+        ${renderCat(mi, 'fat', '🥑 脂肪来源')}
+        ${renderCat(mi, 'veggie', '🥦 蔬菜')}
+        ${m.foods.map((f, fi) => renderFoodItem(mi, fi)).join('')}
+        <div class="hint-row">蛋白质(可选) · 每日目标 ${plan.dProt}g &nbsp;|&nbsp; 蔬菜推荐200-300g</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderCat(mi, cat, label) {
+  const sel = meals[mi].sel[cat];
+  const builtIn = FOODS[cat].map((f, i) =>
+    `<span class="food-tag ${sel===i?'sel':''}" onclick="selectFood(${mi},'${cat}',${i})">${f.emoji} ${f.name}</span>`
+  ).join('');
+  const extras = (userFoods[cat]||[]).map((f, i) => {
+    const ci = FOODS[cat].length + i;
+    return `<span class="food-tag custom ${sel===ci?'sel':''}" onclick="selectFood(${mi},'${cat}',${ci})">${f.emoji} ${f.name}<span class="del-x" onclick="event.stopPropagation();delUserFood('${cat}',${i})" title="移除">×</span></span>`;
+  }).join('');
+  return `<div class="food-cat">
+    <div class="food-cat-hd">${label}</div>
+    <div class="food-tags">${builtIn}${extras}<span class="food-tag add" onclick="openSearch('${cat}',${mi})">+ 添加</span></div>
+  </div>`;
+}
+
+function renderFoodItem(mi, fi) {
+  const f = meals[mi].foods[fi];
+  return `<div class="food-item">
+    <div class="fi-top">
+      <div class="fi-name"><span>${f.emoji}</span>${f.name}</div>
+      <div style="display:flex;align-items:center">
+        <div class="fi-wt"><b>${f.weight}</b><small> g ${f._cat==='staple'?'(生重)':''}</small></div>
+      </div>
+    </div>
+    <div class="fi-ctrls">
+      <button class="fi-btn" onclick="adj(${mi},${fi},-50)">-</button><span class="fi-step">50</span>
+      <button class="fi-btn" onclick="adj(${mi},${fi},-5)">-</button>
+      <input class="fi-input" type="number" value="${f.weight}" onchange="setW(${mi},${fi},this.value)" min="0" step="5">
+      <button class="fi-btn" onclick="adj(${mi},${fi},5)">+</button><span class="fi-step">5</span>
+      <button class="fi-btn" onclick="adj(${mi},${fi},50)">+</button>
+    </div>
+    <div class="fi-macros">
+      <span><span class="dot c"></span>碳水${foodMacro(f,'carb')}g</span>
+      <span><span class="dot p"></span>蛋白${foodMacro(f,'protein')}g</span>
+      <span><span class="dot f"></span>脂肪${foodMacro(f,'fat')}g</span>
+      <span style="color:var(--orange);font-weight:500">${Math.round(foodMacro(f,'carb')*4+foodMacro(f,'protein')*4+foodMacro(f,'fat')*9)}kcal</span>
+    </div>
+  </div>`;
+}
+
+function adj(mi, fi, d) { meals[mi].foods[fi].weight = Math.max(0, meals[mi].foods[fi].weight + d); renderMeals(); updateSummary(); }
+function setW(mi, fi, v) { meals[mi].foods[fi].weight = Math.max(0, parseInt(v)||0); renderMeals(); updateSummary(); }
+function toggleMeal(mi) { meals[mi].expanded = !meals[mi].expanded; renderMeals(); }
+
+// ============= SUMMARY =============
+function updateSummary() {
+  const d = plan.days[curDay];
+  let tc=0, tp=0, tf=0;
+  meals.forEach((m, mi) => { tc += mealMacro(mi,'carb'); tp += mealMacro(mi,'protein'); tf += mealMacro(mi,'fat'); });
+  tc = Math.round(tc); tp = Math.round(tp); tf = Math.round(tf);
+  const eatenCal = Math.round(tc*4 + tp*4 + tf*9);
+
+  // Dashboard update
+  document.getElementById('dEaten').textContent = eatenCal;
+  document.getElementById('dmProteinC').textContent = tp;
+  document.getElementById('dmCarbC').textContent = tc;
+  document.getElementById('dmFatC').textContent = tf;
+
+  const ppct = d.protein > 0 ? Math.min(Math.round(tp/d.protein*100), 999) : 0;
+  const cpct = d.carb > 0 ? Math.min(Math.round(tc/d.carb*100), 999) : 0;
+  const fpct = d.fat > 0 ? Math.min(Math.round(tf/d.fat*100), 999) : 0;
+  const waterMl = Math.round(water * 312.5);
+  const wpct = Math.min(Math.round(waterMl / 2500 * 100), 100);
+
+  document.getElementById('dmProteinP').textContent = ppct + '%';
+  document.getElementById('dmCarbP').textContent = cpct + '%';
+  document.getElementById('dmFatP').textContent = fpct + '%';
+  document.getElementById('dmWaterC').textContent = waterMl;
+  document.getElementById('dmWaterP').textContent = wpct + '%';
+
+  document.getElementById('dmProteinBar').style.width = Math.min(ppct, 100) + '%';
+  document.getElementById('dmCarbBar').style.width = Math.min(cpct, 100) + '%';
+  document.getElementById('dmFatBar').style.width = Math.min(fpct, 100) + '%';
+  document.getElementById('dmWaterBar').style.width = Math.min(wpct, 100) + '%';
+
+  // Tip bar
+  const tips = [];
+  const dc = d.carb-tc, dp = d.protein-tp, df = d.fat-tf;
+  if (dp > 10) tips.push('需补充蛋白质'+dp+'g');
+  if (dc > 20) tips.push('碳水还差'+dc+'g');
+  if (df > 5) tips.push('脂肪还差'+df+'g');
+  if (dc < -20) tips.push('碳水超出'+Math.abs(dc)+'g');
+  document.getElementById('tipBar').innerHTML = tips.length ? tips.join(' · ') : '&#x2705; 营养素分配均衡！';
+  saveDailyData();
+}
+
+
+// ============= FOOD SEARCH =============
+// Map meal categories to DB categories for smart default filtering
+const CAT_MAP = {
+  staple: ['谷薯类'],
+  protein: ['畜肉类','禽肉类','水产海鲜','蛋奶类','豆制品'],
+  fat: ['坚果种子','油脂调味'],
+  veggie: ['蔬菜类']
+};
+let searchFilter = '全部';
+
+function openSearch(cat, mi) {
+  searchMealIdx = mi;
+  searchCatIdx = cat;
+  searchFilter = '推荐';
+  document.getElementById('searchInput').value = '';
+  renderSearchCats();
+  doSearch();
+  document.getElementById('searchModal').classList.add('show');
+  setTimeout(() => document.getElementById('searchInput').focus(), 100);
+}
+function closeSearch() {
+  document.getElementById('searchModal').classList.remove('show');
+}
+
+function renderSearchCats() {
+  const cats = ['推荐', '全部', ...FOOD_DB_CATS];
+  document.getElementById('searchCatBar').innerHTML = cats.map(c =>
+    `<span class="search-cat-btn ${c===searchFilter?'active':''}" onclick="searchFilter='${c}';renderSearchCats();doSearch()">${c}</span>`
+  ).join('');
+}
+
+function doSearch() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  let results = FOOD_DB;
+
+  // filter by category
+  if (searchFilter === '推荐' && searchCatIdx) {
+    const allowedCats = CAT_MAP[searchCatIdx] || [];
+    results = results.filter(f => allowedCats.includes(f.cat));
+  } else if (searchFilter !== '全部' && searchFilter !== '推荐') {
+    results = results.filter(f => f.cat === searchFilter);
+  }
+
+  // filter by keyword
+  if (q) {
+    results = results.filter(f => f.name.toLowerCase().includes(q) || f.cat.includes(q));
+  }
+
+  // check which are already added as user shortcuts for this category
+  const addedNames = new Set();
+  if (searchCatIdx) {
+    FOODS[searchCatIdx].forEach(f => addedNames.add(f.name));
+    (userFoods[searchCatIdx]||[]).forEach(f => addedNames.add(f.name));
+  }
+
+  const box = document.getElementById('searchResults');
+  if (!results.length) {
+    box.innerHTML = '<div class="search-empty">未找到匹配的食物</div>';
+    return;
+  }
+
+  // group by category
+  const grouped = {};
+  results.forEach(f => { if (!grouped[f.cat]) grouped[f.cat] = []; grouped[f.cat].push(f); });
+
+  let html = `<div class="search-count">共 ${results.length} 种食物</div>`;
+  for (const cat of Object.keys(grouped)) {
+    html += `<div class="search-group-title">${cat}</div>`;
+    grouped[cat].forEach((f, fi) => {
+      const kcal = Math.round(f.carb * 4 + f.protein * 4 + f.fat * 9);
+      const isAdded = addedNames.has(f.name);
+      const dbIdx = FOOD_DB.indexOf(f);
+      html += `<div class="search-item ${isAdded?'added':''}" onclick="addFromDB(${dbIdx})">
+        <div class="si-left">
+          <span class="si-emoji">${f.emoji}</span>
+          <div class="si-info">
+            <div class="si-name">${f.name}</div>
+            <div class="si-macros">
+              <span>碳${f.carb}g</span>
+              <span>蛋${f.protein}g</span>
+              <span>脂${f.fat}g</span>
+            </div>
+          </div>
+        </div>
+        <span class="si-kcal">${kcal}kcal</span>
+        <div class="si-add">${isAdded?'✓':'+'}</div>
+      </div>`;
+    });
+  }
+  box.innerHTML = html;
+}
+
+function addFromDB(dbIdx) {
+  const f = FOOD_DB[dbIdx];
+  const cat = searchCatIdx;
+  if (!cat) return;
+
+  // Check if already in built-in
+  if (FOODS[cat].some(bf => bf.name === f.name)) {
+    closeSearch();
+    // auto select it
+    const idx = FOODS[cat].findIndex(bf => bf.name === f.name);
+    if (idx >= 0) selectFood(searchMealIdx, cat, idx);
+    return;
+  }
+
+  // Check if already in user shortcuts
+  if (!userFoods[cat]) userFoods[cat] = [];
+  const existIdx = userFoods[cat].findIndex(uf => uf.name === f.name);
+  if (existIdx >= 0) {
+    closeSearch();
+    selectFood(searchMealIdx, cat, FOODS[cat].length + existIdx);
+    return;
+  }
+
+  // Add to user shortcuts
+  const newFood = { name: f.name, emoji: f.emoji, carb: f.carb, protein: f.protein, fat: f.fat };
+  userFoods[cat].push(newFood);
+  localStorage.setItem('user_foods', JSON.stringify(userFoods));
+
+  closeSearch();
+  // Auto-select the newly added food
+  const newIdx = FOODS[cat].length + userFoods[cat].length - 1;
+  selectFood(searchMealIdx, cat, newIdx);
+}
+
+function delUserFood(cat, ci) {
+  const globalIdx = FOODS[cat].length + ci;
+  if (meals.length) {
+    meals.forEach(m => {
+      if (m.sel[cat] === globalIdx) {
+        m.foods = m.foods.filter(f => !(f._cat === cat && f._idx === globalIdx));
+        m.sel[cat] = null;
+      } else if (m.sel[cat] > globalIdx) {
+        const old = m.sel[cat];
+        m.foods.forEach(f => { if (f._cat === cat && f._idx === old) f._idx = old - 1; });
+        m.sel[cat] = old - 1;
+      }
+    });
+  }
+  userFoods[cat].splice(ci, 1);
+  localStorage.setItem('user_foods', JSON.stringify(userFoods));
+  if (plan) { renderMeals(); updateSummary(); }
+}
+
+// ============= TRAINING =============
+const BUILT_IN_TRAINS = ['胸','背','肩','手臂','核心','臀','腿','髋','爬坡','椭圆仪','爬楼机'];
+let customTrains = JSON.parse(localStorage.getItem('custom_trains') || '[]');
+let selectedTrains = new Set();
+
+function renderTrainTags() {
+  const box = document.getElementById('trainTags');
+  if (!box) return;
+  let html = BUILT_IN_TRAINS.map(t =>
+    `<span class="train-tag ${selectedTrains.has(t)?'sel':''}" onclick="toggleTrain('${t}')">${t}</span>`
+  ).join('');
+  html += customTrains.map(t =>
+    `<span class="train-tag custom-tag ${selectedTrains.has(t)?'sel':''}" onclick="toggleTrain('${t}')">${t}<span class="tag-del" onclick="event.stopPropagation();delCustomTrain('${t}')">×</span></span>`
+  ).join('');
+  box.innerHTML = html;
+  updateTrainSummary();
+}
+
+function toggleTrain(t) {
+  if (selectedTrains.has(t)) selectedTrains.delete(t);
+  else selectedTrains.add(t);
+  renderTrainTags();
+  saveDailyData();
+}
+
+function addCustomTrain() {
+  const input = document.getElementById('trainCustomInput');
+  const val = input.value.trim();
+  if (!val) return;
+  if (BUILT_IN_TRAINS.includes(val) || customTrains.includes(val)) {
+    selectedTrains.add(val);
+    renderTrainTags();
+    input.value = '';
+    return;
+  }
+  customTrains.push(val);
+  localStorage.setItem('custom_trains', JSON.stringify(customTrains));
+  selectedTrains.add(val);
+  renderTrainTags();
+  saveDailyData();
+  input.value = '';
+}
+
+function delCustomTrain(t) {
+  customTrains = customTrains.filter(x => x !== t);
+  selectedTrains.delete(t);
+  localStorage.setItem('custom_trains', JSON.stringify(customTrains));
+  renderTrainTags();
+}
+
+function updateTrainSummary() {
+  const el = document.getElementById('trainSelected');
+  if (!el) return;
+  if (selectedTrains.size === 0) { el.innerHTML = '点击上方标签选择今日训练内容'; return; }
+  el.innerHTML = '已选择：<b>' + [...selectedTrains].join('、') + '</b>';
+}
+
+// Enter key in custom input
+document.addEventListener('keydown', function(e) {
+  if (e.target.id === 'trainCustomInput' && e.key === 'Enter') { e.preventDefault(); addCustomTrain(); }
+});
+
+// ============= POOP =============
+const POOP_OPTIONS = ['0次','1次','2次','3次','4次+'];
+let selectedPoop = '';
+
+function renderPoopSelector() {
+  const box = document.getElementById('poopSelector');
+  if (!box) return;
+  box.innerHTML = POOP_OPTIONS.map(p =>
+    `<span class="poop-btn ${selectedPoop===p?'sel':''}" onclick="selectPoop('${p}')">💩 ${p}</span>`
+  ).join('');
+}
+
+function selectPoop(p) {
+  selectedPoop = selectedPoop === p ? '' : p;
+  renderPoopSelector();
+  saveDailyData();
+}
+
+// ============= DAILY DATA SAVE/LOAD =============
+function saveDailyData() {
+  if (!plan || !meals.length) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const dailyData = JSON.parse(localStorage.getItem('daily_data') || '{}');
+  dailyData[today] = {
+    meals: meals.map((m, mi) => ({
+      name: m.name, icon: m.icon,
+      foods: m.foods.map(f => ({ name: f.name, emoji: f.emoji, carb: f.carb, protein: f.protein, fat: f.fat, weight: f.weight })),
+      mc: mealMacro(mi, 'carb'), mp: mealMacro(mi, 'protein'), mf: mealMacro(mi, 'fat')
+    })),
+    trains: [...selectedTrains],
+    poop: selectedPoop,
+    dayType: plan.days[curDay].type
+  };
+  localStorage.setItem('daily_data', JSON.stringify(dailyData));
+}
+
+function getYesterdayData() {
+  const yest = new Date();
+  yest.setDate(yest.getDate() - 1);
+  const yStr = yest.toISOString().slice(0, 10);
+  const dailyData = JSON.parse(localStorage.getItem('daily_data') || '{}');
+  return dailyData[yStr] || null;
+}
+
+// ============= WATER =============
+function initWater() {
+  // Update dashboard water display
+  if (plan) updateSummary();
+}
+
+// ============= WEIGHT RECORDS =============
+function addWeight() {
+  const v = parseFloat(document.getElementById('wtInput').value);
+  if (!v || v < 20 || v > 300) { alert('请输入有效体重'); return; }
+  const today = new Date().toISOString().slice(0, 10);
+  // check if already recorded today
+  const existing = weightRecords.findIndex(r => r.date === today);
+  if (existing >= 0) { weightRecords[existing].kg = v; }
+  else { weightRecords.unshift({ date: today, kg: v }); }
+  localStorage.setItem('wt_records', JSON.stringify(weightRecords));
+  document.getElementById('wtInput').value = '';
+  renderWeightRecords();
+}
+
+function renderWeightRecords() {
+  const box = document.getElementById('wtRecords');
+  const empty = document.getElementById('wtEmpty');
+  if (!weightRecords.length) { box.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  // calculate cycle day
+  const startDate = weightRecords[weightRecords.length - 1].date;
+  const start = new Date(startDate);
+
+  box.innerHTML = weightRecords.map((r, i) => {
+    const diff = Math.floor((new Date(r.date) - start) / 86400000);
+    const dayNum = diff + 1;
+    const weekNum = Math.ceil(dayNum / 7);
+    let changeHtml = '';
+    if (i < weightRecords.length - 1) {
+      const prev = weightRecords[i + 1].kg;
+      const delta = (r.kg - prev).toFixed(2);
+      const cls = delta > 0 ? 'up' : (delta < 0 ? 'down' : '');
+      changeHtml = `<span class="wt-change ${cls}">${delta > 0 ? '+' : ''}${delta}kg</span>`;
+    }
+    const isToday = r.date === new Date().toISOString().slice(0, 10);
+    return `<div class="card ${isToday ? 'wt-input-card' : 'wt-record'}">
+      <div class="wt-input-row">
+        <div class="wt-date">${r.date} <span class="wt-day-badge">D${dayNum}</span></div>
+        <div class="wt-kg">${r.kg}<small> kg</small>${changeHtml}</div>
+      </div>
+      ${isToday ? '<div class="wt-note">&#x1F4CB; 体档设置时自动记录</div>' : ''}
+    </div>`;
+  }).join('');
+
+  // update period
+  const totalDays = Math.floor((new Date(weightRecords[0].date) - start) / 86400000) + 1;
+  document.getElementById('wtPeriod').textContent = '第 ' + Math.ceil(totalDays / 7) + ' 周期';
+}
+
+function deleteWeight(i) {
+  weightRecords.splice(i, 1);
+  localStorage.setItem('wt_records', JSON.stringify(weightRecords));
+  renderWeightRecords();
+}
+
+// ============= EMOJI PICKER =============
+const EMOJI_OPTIONS = [
+  '🌱','🌿','🍀','🌸','🌺','🌻','🌼','🌷','🌹','💐',
+  '🍎','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍑','🥝',
+  '🎯','🏋️','💪','🏃','🚴','⚡','🔥','✨','⭐','🌟',
+  '📍','📌','📏','📐','📈','📉','📊','📋','🗓️','📝',
+  '🖼','🎪','🎨','🎭','🎬','🎵','🎶','🎸','🎹','🎺',
+  '❤️','🧡','💛','💚','💙','💜','🤍','🖤','🤎','💗',
+  '🐱','🐶','🐻','🐼','🐨','🐯','🦁','🐸','🐵','🦊',
+  '👑','💎','🏆','🥇','🎖️','🏅','🎗️','🎀','🎁','🪄',
+  '☀️','🌙','⛅','🌈','🌊','❄️','🍂','🌴','🎄','🌵',
+  '😊','😎','🥰','😤','💩','👻','🤡','😈','👽','🤖',
+];
+
+let ckEmojis = JSON.parse(localStorage.getItem('ck_emojis') || '{}');
+const EMOJI_DEFAULTS = { startW:'🌱', goalW:'🏋️', yestW:'🖼', todayW:'🍊', dayChange:'📏', cumChange:'📉', toGoal:'🎯' };
+let activeEmojiTarget = null;
+
+function getEmoji(key) { return ckEmojis[key] || EMOJI_DEFAULTS[key] || '📍'; }
+
+function openEmojiPicker(el) {
+  const picker = document.getElementById('emojiPicker');
+  activeEmojiTarget = el;
+  const key = el.dataset.key;
+  picker.innerHTML = '<div class="emoji-picker-grid">' + EMOJI_OPTIONS.map(e =>
+    `<span class="emoji-pick" onclick="pickEmoji('${e}')">${e}</span>`
+  ).join('') + '</div>';
+  // position near clicked element
+  const rect = el.getBoundingClientRect();
+  const panel = document.getElementById('checkinPanel');
+  const panelRect = panel.getBoundingClientRect();
+  picker.style.top = (rect.bottom - panelRect.top + panel.scrollTop + 4) + 'px';
+  picker.style.left = '10px';
+  picker.classList.add('show');
+  event.stopPropagation();
+}
+
+function pickEmoji(emoji) {
+  if (!activeEmojiTarget) return;
+  const key = activeEmojiTarget.dataset.key;
+  activeEmojiTarget.textContent = emoji;
+  ckEmojis[key] = emoji;
+  localStorage.setItem('ck_emojis', JSON.stringify(ckEmojis));
+  document.getElementById('emojiPicker').classList.remove('show');
+  activeEmojiTarget = null;
+}
+
+// Close picker on outside click
+document.addEventListener('click', function(e) {
+  const picker = document.getElementById('emojiPicker');
+  if (picker && !picker.contains(e.target) && !e.target.classList.contains('ck-emoji')) {
+    picker.classList.remove('show');
+  }
+});
+
+// ============= CHECK-IN =============
+let checkinGoalW = parseFloat(localStorage.getItem('ck_goal_w')) || 0;
+let checkinStartW = parseFloat(localStorage.getItem('ck_start_w')) || 0;
+let checkinRecords = JSON.parse(localStorage.getItem('ck_records') || '[]');
+
+function openCheckin() {
+  const today = new Date();
+  const yyyy = today.getFullYear(), mm = String(today.getMonth()+1).padStart(2,'0'), dd = String(today.getDate()).padStart(2,'0');
+  document.getElementById('checkinDate').textContent = `${yyyy}-${mm}-${dd} 打卡`;
+
+  // Restore saved emojis
+  document.querySelectorAll('.ck-emoji').forEach(el => {
+    el.textContent = getEmoji(el.dataset.key);
+  });
+
+  // Weight data
+  if (!checkinStartW && weightRecords.length) {
+    checkinStartW = weightRecords[weightRecords.length - 1].kg;
+    localStorage.setItem('ck_start_w', checkinStartW);
+  }
+  document.getElementById('ckStartW').textContent = checkinStartW || '--';
+
+  // Goal weight: if not set, show input
+  const goalEl = document.getElementById('ckGoalW');
+  if (!checkinGoalW) {
+    goalEl.innerHTML = '<input type="number" id="ckGoalInput" placeholder="设置" step="0.1" style="width:70px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:14px;text-align:center;font-weight:600">';
+  } else {
+    goalEl.textContent = checkinGoalW;
+  }
+
+  // Yesterday weight - prefill input, user can override
+  const yestW = getYesterdayWeight();
+  document.getElementById('ckYestW').value = yestW || '';
+
+  // Today weight: prefill if already recorded today
+  const todayStr = `${yyyy}-${mm}-${dd}`;
+  const todayRec = weightRecords.find(r => r.date === todayStr);
+  document.getElementById('ckTodayW').value = todayRec ? todayRec.kg : '';
+
+  updateCheckinCalc();
+
+  // Load yesterday's data for diet/training/poop
+  const yestData = getYesterdayData();
+
+  // Diet (yesterday)
+  renderCheckinDiet(yestData);
+
+  // Training summary (yesterday)
+  const trainEl = document.getElementById('ckTrainSummary');
+  const yestTrains = yestData ? yestData.trains : [];
+  if (yestTrains.length > 0) {
+    trainEl.innerHTML = '<span style="font-size:14px;font-weight:600">&#x1F3CB; ' + yestTrains.join('、') + '</span>';
+  } else {
+    trainEl.innerHTML = '<span style="color:var(--sub);font-size:12px">昨日无训练记录</span>';
+  }
+
+  // Poop summary (yesterday)
+  const poopEl = document.getElementById('ckPoopSummary');
+  const yestPoop = yestData ? yestData.poop : '';
+  if (yestPoop) {
+    poopEl.innerHTML = '<span style="font-size:14px">&#x1F4A9; ' + yestPoop + '</span>';
+  } else {
+    poopEl.innerHTML = '<span style="color:var(--sub);font-size:12px">昨日无便便记录</span>';
+  }
+
+  // Reset
+  document.getElementById('ckPreview').style.display = 'none';
+
+  document.getElementById('checkinOverlay').classList.add('show');
+}
+
+function closeCheckin() {
+  document.getElementById('checkinOverlay').classList.remove('show');
+}
+
+function getYesterdayWeight() {
+  const yest = new Date(); yest.setDate(yest.getDate() - 1);
+  const yStr = yest.toISOString().slice(0,10);
+  const rec = weightRecords.find(r => r.date === yStr);
+  return rec ? rec.kg : null;
+}
+
+function updateCheckinCalc() {
+  const todayW = parseFloat(document.getElementById('ckTodayW').value);
+  const cumEl = document.getElementById('ckCumChange');
+  const goalDistEl = document.getElementById('ckToGoal');
+  const dayChangeEl = document.getElementById('ckDayChange');
+  const yestW = parseFloat(document.getElementById('ckYestW').value);
+
+  // 体重幅度：今日 - 昨日
+  if (todayW && yestW) {
+    const diff = (todayW - yestW).toFixed(2);
+    const icon = diff > 0 ? '📈' : diff < 0 ? '📉' : '➡️';
+    dayChangeEl.innerHTML = icon + ' ' + Math.abs(diff);
+    dayChangeEl.className = 'cr-val ' + (diff > 0 ? 'up' : diff < 0 ? 'down' : 'neutral');
+  } else {
+    dayChangeEl.textContent = '--'; dayChangeEl.className = 'cr-val neutral';
+  }
+
+  // 累计变化
+  if (todayW && checkinStartW) {
+    const cum = (todayW - checkinStartW).toFixed(2);
+    const icon = cum > 0 ? '📈' : cum < 0 ? '📉' : '➡️';
+    cumEl.innerHTML = icon + ' ' + (cum > 0 ? '+' : '') + cum;
+    cumEl.className = 'cr-val ' + (cum > 0 ? 'up' : cum < 0 ? 'down' : 'neutral');
+  } else {
+    cumEl.textContent = '--'; cumEl.className = 'cr-val neutral';
+  }
+
+  // check if goal was just entered
+  const goalInput = document.getElementById('ckGoalInput');
+  if (goalInput && goalInput.value) {
+    checkinGoalW = parseFloat(goalInput.value);
+    localStorage.setItem('ck_goal_w', checkinGoalW);
+  }
+
+  // 距离目标：只显示绝对值
+  if (todayW && checkinGoalW) {
+    const dist = Math.abs(todayW - checkinGoalW).toFixed(2);
+    goalDistEl.textContent = dist;
+    goalDistEl.className = 'cr-val neutral';
+  } else {
+    goalDistEl.textContent = '--'; goalDistEl.className = 'cr-val neutral';
+  }
+}
+
+// Listen for weight input changes
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'ckTodayW' || e.target.id === 'ckGoalInput' || e.target.id === 'ckYestW') updateCheckinCalc();
+});
+
+function renderCheckinDiet(yestData) {
+  const box = document.getElementById('ckDietSection');
+  if (!yestData || !yestData.meals || !yestData.meals.length) {
+    box.innerHTML = '<div style="font-size:12px;color:var(--sub);text-align:center;padding:8px">昨日无饮食记录</div>';
+    return;
+  }
+  box.innerHTML = yestData.meals.map(m => {
+    const mc = m.mc, mp = m.mp, mf = m.mf;
+    const kcal = Math.round(mc*4 + mp*4 + mf*9);
+    const foodList = m.foods.map(f => `${f.emoji} ${f.name} ${f.weight}g`).join('、');
+    return `<div class="checkin-meal-summary">
+      <div class="checkin-meal-name">${m.icon} ${m.name}</div>
+      <div class="checkin-meal-foods">${foodList || '未选择食物'}</div>
+      <div class="checkin-meal-macros">
+        <span class="mc">碳${mc}g</span><span class="mp">蛋${mp}g</span>
+        <span class="mf">脂${mf}g</span><span style="background:#FFF3E0;color:var(--orange);padding:2px 6px;border-radius:8px">${kcal}kcal</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
+
+function submitCheckin() {
+  // Save goal weight if just entered
+  const goalInput = document.getElementById('ckGoalInput');
+  if (goalInput && goalInput.value) {
+    checkinGoalW = parseFloat(goalInput.value);
+    localStorage.setItem('ck_goal_w', checkinGoalW);
+  }
+
+  // Save today's weight if entered
+  const todayW = parseFloat(document.getElementById('ckTodayW').value);
+  if (todayW) {
+    const today = new Date().toISOString().slice(0,10);
+    const existing = weightRecords.findIndex(r => r.date === today);
+    if (existing >= 0) weightRecords[existing].kg = todayW;
+    else weightRecords.unshift({ date: today, kg: todayW });
+    localStorage.setItem('wt_records', JSON.stringify(weightRecords));
+
+    // set start weight if first record
+    if (!checkinStartW) {
+      checkinStartW = todayW;
+      localStorage.setItem('ck_start_w', checkinStartW);
+    }
+  }
+
+  // Build checkin text
+  const today = new Date();
+  const yyyy = today.getFullYear(), mm = String(today.getMonth()+1).padStart(2,'0'), dd = String(today.getDate()).padStart(2,'0');
+  const ckName = document.getElementById('ckName').value.trim() || '湉湉';
+
+  let text = `${yyyy}-${mm}-${dd} ${ckName}打卡\n`;
+  text += `————————————\n`;
+  text += `${getEmoji('startW')} 初始体重：${checkinStartW || '--'}kg\n`;
+  text += `${getEmoji('goalW')} 目标体重：${checkinGoalW || '--'}kg\n`;
+  const yestW = parseFloat(document.getElementById('ckYestW').value) || null;
+  text += `${getEmoji('yestW')} 昨日体重：${yestW || '--'}kg\n`;
+  text += `${getEmoji('todayW')} 今日称重：${todayW || '--'}kg\n`;
+
+  // 体重幅度
+  if (todayW && yestW) {
+    const diff = (todayW - yestW).toFixed(2);
+    const icon = diff > 0 ? '📈' : diff < 0 ? '📉' : '➡️';
+    text += `${getEmoji('dayChange')} 体重幅度：${icon} ${Math.abs(diff)}kg\n`;
+  }
+  text += `\n`;
+
+  const cum = todayW && checkinStartW ? (todayW - checkinStartW).toFixed(2) : '--';
+  const distVal = todayW && checkinGoalW ? Math.abs(todayW - checkinGoalW).toFixed(2) : '--';
+  text += `${getEmoji('cumChange')} 累计变化：${cum !== '--' ? (cum > 0 ? '+' : '') + cum : '--'}kg\n`;
+  text += `${getEmoji('toGoal')} 距离目标：${distVal}kg\n\n`;
+
+  // Load yesterday's data for diet/training/poop
+  const yestData = getYesterdayData();
+
+  // Diet (yesterday)
+  text += `${document.getElementById('ckDivDiet').value}\n`;
+  if (yestData && yestData.meals && yestData.meals.length) {
+    if (yestData.dayType) text += `📋 ${DLABELS[yestData.dayType]} 饮食\n`;
+    yestData.meals.forEach(m => {
+      const kcal = Math.round(m.mc*4+m.mp*4+m.mf*9);
+      text += `\n${m.icon} ${m.name}（碳${m.mc}g 蛋${m.mp}g 脂${m.mf}g ${kcal}kcal）\n`;
+      m.foods.forEach(f => { text += `  ${f.emoji} ${f.name} ${f.weight}g\n`; });
+    });
+    let tc=0,tp=0,tf=0;
+    yestData.meals.forEach(m => { tc+=m.mc; tp+=m.mp; tf+=m.mf; });
+    const tkcal = Math.round(tc*4+tp*4+tf*9);
+    text += `\n📊 合计：碳${Math.round(tc)}g 蛋${Math.round(tp)}g 脂${Math.round(tf)}g ${tkcal}kcal\n`;
+  } else {
+    text += `昨日无饮食数据\n`;
+  }
+
+  // Training (yesterday)
+  text += `\n${document.getElementById('ckDivTrain').value}\n`;
+  const yestTrains = yestData ? yestData.trains : [];
+  if (yestTrains.length > 0) {
+    text += `训练：${yestTrains.join('、')}\n`;
+  } else {
+    text += `训练：休息日\n`;
+  }
+
+  // Poop (yesterday)
+  text += `${document.getElementById('ckDivPoop').value}\n`;
+  const yestPoop = yestData ? yestData.poop : '';
+  text += `便便：${yestPoop || '未记录'}\n`;
+
+  // Save record
+  checkinRecords.push({ date: `${yyyy}-${mm}-${dd}`, text, todayW });
+  localStorage.setItem('ck_records', JSON.stringify(checkinRecords));
+
+  // Show preview
+  document.getElementById('ckPreviewText').textContent = text;
+  document.getElementById('ckPreview').style.display = 'block';
+  document.getElementById('ckPreview').scrollIntoView({ behavior: 'smooth' });
+}
+
+function copyCheckin() {
+  const text = document.getElementById('ckPreviewText').textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.querySelector('.checkin-copy');
+      btn.textContent = '已复制!';
+      setTimeout(() => btn.textContent = '复制文本', 1500);
+    });
+  } else {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    const btn = document.querySelector('.checkin-copy');
+    btn.textContent = '已复制!';
+    setTimeout(() => btn.textContent = '复制文本', 1500);
+  }
+}
+
+// ============= INIT =============
+document.addEventListener('DOMContentLoaded', () => {
+  updateCoeffDefaults();
+  renderCycleEditor();
+  initWater();
+  renderWeightRecords();
+  renderTrainTags();
+  renderPoopSelector();
+});
+</script>
+</body>
+</html>
