@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Keep Going - 凯圣王碳循环计划</title>
+  <title>Keep Going - 营养管理</title>
   <script>/**
  * 中国常见食物营养成分数据库
  * 数据参考《中国食物成分表》标准值，每100g可食部分
@@ -430,8 +430,10 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
       box-shadow:var(--shadow);border:1px solid rgba(228,232,238,.5)}
     .meal-card.snack-card{border:1.5px dashed #FFB74D;background:linear-gradient(135deg,#FFFDE7,#FFF8E1)}
     .meal-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;
-      transition:background .15s}
-    .meal-hd:active{background:#F8F9FB}
+      transition:background .15s;border-radius:12px 12px 0 0}
+    .meal-hd.meal-bg-0{background:linear-gradient(to right,#FFF3E0,#FFE0B2)}
+    .meal-hd.meal-bg-1{background:linear-gradient(to right,#FFFDE7,#FFF9C4)}
+    .meal-hd.meal-bg-2{background:linear-gradient(to right,#E8F0FE,#C8D8F0)}
     .meal-hd-left{display:flex;align-items:center;gap:8px}
     .meal-hd h3{font-size:15px;font-weight:700}
     .meal-macros{display:flex;gap:5px;font-size:10px}
@@ -459,20 +461,15 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
     /* === FOOD ITEM === */
     .food-item{background:linear-gradient(135deg,#F8FAF8,#F2F6F4);border-radius:12px;padding:12px 14px;margin-top:8px;
       border:1px solid rgba(67,185,127,.08)}
-    .fi-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-    .fi-name{font-size:14px;font-weight:700;display:flex;align-items:center;gap:5px}
-    .fi-wt{display:flex;align-items:baseline;gap:2px}
-    .fi-wt b{font-size:18px;color:var(--green-dark);font-weight:800}.fi-wt small{font-size:12px;color:var(--sub)}
-    .fi-ctrls{display:flex;align-items:center;gap:6px;margin-bottom:8px}
-    .fi-btn{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border);
-      background:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-      transition:all .15s;color:var(--text)}
-    .fi-btn:active{background:var(--green-light);border-color:var(--green);transform:scale(.9)}
-    .fi-step{font-size:10px;color:var(--sub);font-weight:500}
-    .fi-input{width:60px;text-align:center;border:1.5px solid var(--border);border-radius:8px;
-      padding:4px 2px;font-size:14px;font-weight:700;background:#fff;transition:border-color .2s;color:var(--text)}
-    .fi-input:focus{border-color:var(--green);outline:none;box-shadow:0 0 0 3px rgba(67,185,127,.12)}
-    .fi-macros{display:flex;gap:10px;font-size:11px;color:var(--sub);font-weight:500}
+    .fi-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;
+      background:var(--green-light);border-left:3px solid var(--green);border-radius:8px;padding:8px 12px}
+    .fi-name{font-size:15px;font-weight:700;display:flex;align-items:center;gap:5px;color:var(--text)}
+    .fi-unit{font-size:14px;color:var(--sub);font-weight:500}
+    .fi-ctrls{display:flex;align-items:center;gap:6px}
+.fi-input{width:80px;text-align:center;border:2px solid var(--green);border-radius:8px;
+      padding:6px 4px;font-size:16px;font-weight:700;background:#fff;transition:border-color .2s;color:var(--green-dark, #2d7a4f)}
+    .fi-input:focus{border-color:var(--green);outline:none;box-shadow:0 0 0 3px rgba(67,185,127,.18)}
+    .fi-macros{display:flex;gap:10px;font-size:12px;color:#555;font-weight:600}
     .fi-macros span{display:flex;align-items:center;gap:3px}
     .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
     .dot.c{background:var(--green)}.dot.p{background:var(--orange)}.dot.f{background:var(--yellow)}
@@ -601,7 +598,7 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
     .ts-row:last-child{border-bottom:none}
     .ts-label{font-size:15px;font-weight:600;color:var(--text);flex-shrink:0}
     .ts-value{font-size:14px;color:var(--sub);display:flex;align-items:center;gap:8px}
-    .ts-toggle-group{display:flex;gap:8px}
+    .ts-toggle-group{display:flex;gap:8px;flex-wrap:wrap}
     .ts-toggle-btn{padding:8px 22px;border-radius:24px;border:1.5px solid var(--border);
       font-size:14px;font-weight:600;cursor:pointer;background:var(--card);color:var(--sub);
       transition:all .25s;white-space:nowrap}
@@ -635,6 +632,18 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
       width:20px;height:3px;background:linear-gradient(135deg,var(--green),var(--green-dark));border-radius:2px}
     .nav-icon{font-size:20px;margin-bottom:2px;transition:transform .2s}
     .nav-item.active .nav-icon{transform:scale(1.1)}
+
+    /* === PLAN SELECT MODAL === */
+    .plan-card{padding:14px 16px;border:2px solid var(--border);border-radius:14px;
+      margin-bottom:10px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px}
+    .plan-card:active{transform:scale(.98)}
+    .plan-card.active{border-color:var(--green);background:rgba(67,185,127,.05)}
+    .plan-card-icon{font-size:28px;flex-shrink:0}
+    .plan-card-body{flex:1;min-width:0}
+    .plan-card-name{font-size:15px;font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:6px}
+    .plan-card-badge{display:inline-block;font-size:11px;padding:2px 8px;
+      background:var(--green);color:#fff;border-radius:10px}
+    .plan-card-desc{font-size:12px;color:var(--sub);line-height:1.5}
 
     /* === MODAL === */
     .modal-bg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;
@@ -909,7 +918,7 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
   <div class="card" id="setupPrompt" style="text-align:center;padding:40px 20px">
     <div style="font-size:40px;margin-bottom:12px">&#x1F464;</div>
     <div style="font-size:15px;font-weight:600;margin-bottom:8px">请先设置个人信息</div>
-    <div style="font-size:13px;color:var(--sub);margin-bottom:16px">前往「我的」填写体重、体型和营养素系数，即可自动生成碳循环计划</div>
+    <div style="font-size:13px;color:var(--sub);margin-bottom:16px">前往「我的」填写体重和营养素系数，即可自动生成饮食计划</div>
     <button class="btn-primary" onclick="switchPage('profile')">前往设置</button>
   </div>
 
@@ -917,7 +926,8 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
   <div id="planContent" style="display:none">
     <div class="card fade-in">
       <div class="plan-header">
-        <h2>凯圣王·碳循环计划</h2>
+        <h2 id="planTitle">凯圣王·碳循环计划</h2>
+        <div id="planSubtitle" style="display:none;font-size:13px;color:var(--sub);margin-top:2px"></div>
         <div class="day-tag" id="dayTag">高碳日</div>
         <div class="day-selector" id="daySelector"></div>
       </div>
@@ -1019,7 +1029,7 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
     <!-- Tips -->
     <div class="card fade-in">
       <div class="card-title">&#x1F4A1; 温馨提示</div>
-      <ol class="tips-list">
+      <ol class="tips-list" id="planTips">
         <li>炒菜油脂需计算：牛油果油、山茶油、椰子油、橄榄油，每5g约4.5g脂肪</li>
         <li>无法估计烹饪中有多少脂肪的情况下，每餐多补充5g脂肪在总计数里</li>
         <li>蛋白质全程不变，保证肌肉不流失</li>
@@ -1039,7 +1049,7 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
   <div class="card">
     <div class="wt-header">
       <div class="period" id="wtPeriod">第 1 周期</div>
-      <div style="font-size:13px;color:var(--sub);margin-bottom:10px">&#x1F504; 切换凯圣王碳循环计划</div>
+      <div style="font-size:13px;color:var(--sub);margin-bottom:10px" id="wtPlanLabel">&#x1F504; 切换凯圣王碳循环计划</div>
     </div>
     <div style="font-size:13px;color:var(--sub);margin-bottom:6px">记录今日体重</div>
     <div class="wt-input-area">
@@ -1054,7 +1064,7 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
 <!-- ==================== PAGE: HISTORY ==================== -->
 <div class="page" id="pageHistory">
   <div class="card">
-    <div class="card-title">&#x1F4CA; 历史碳循环计划</div>
+    <div class="card-title">&#x1F4CA; 历史饮食计划</div>
     <div class="hist-filter">
       <select class="hist-select" id="histMonth" onchange="loadHistory()"></select>
       <select class="hist-select" id="histWeek" onchange="loadHistory()">
@@ -1072,7 +1082,7 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
   <div class="card">
     <div class="ts-row">
       <div class="ts-label">当前计划</div>
-      <div class="ts-value">凯圣王碳循环计划 <button class="ts-switch-btn" onclick="alert('暂时只支持碳循环计划')">切换</button></div>
+      <div class="ts-value"><span id="tsPlanName">凯圣王碳循环计划</span> <button class="ts-switch-btn" onclick="openPlanSelect()">切换</button></div>
     </div>
     <div class="ts-row">
       <div class="ts-label">性别</div>
@@ -1120,6 +1130,17 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
         <div class="ts-toggle-btn" data-snack="after-dinner" onclick="setSnackPos('after-dinner')">晚餐后</div>
       </div>
     </div>
+    <div class="ts-row" id="tsTrainVolRow" style="display:none;flex-direction:column;align-items:stretch;gap:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="ts-label">每周训练量</div>
+      </div>
+      <div class="ts-toggle-group" style="justify-content:flex-start">
+        <div class="ts-toggle-btn" data-band="2-3h" onclick="setTrainBand('2-3h')">2-3h</div>
+        <div class="ts-toggle-btn" data-band="4-5h" onclick="setTrainBand('4-5h')">4-5h</div>
+        <div class="ts-toggle-btn" data-band="6-7h" onclick="setTrainBand('6-7h')">6-7h</div>
+        <div class="ts-toggle-btn" data-band="8-9h" onclick="setTrainBand('8-9h')">8-9h</div>
+      </div>
+    </div>
   </div>
 
   <div class="card">
@@ -1131,7 +1152,7 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
         <input type="number" id="inWeight" value="70" min="30" max="200" step="0.5"></div>
       <div class="form-group" style="display:none"><label>性别</label>
         <select id="inGender"><option value="male">男</option><option value="female">女</option></select></div>
-      <div class="form-group"><label>体型</label>
+      <div class="form-group" id="bodyTypeGroup"><label>体型</label>
         <select id="inBody" onchange="updateCoeffDefaults()">
           <option value="endo">内胚型</option><option value="meso">中胚型</option><option value="ecto">外胚型</option>
         </select></div>
@@ -1146,7 +1167,7 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
     </div>
 
     <!-- Custom Cycle -->
-    <div class="coeff-section">
+    <div class="coeff-section" id="cycleSection">
       <div style="font-size:12px;color:var(--sub);margin-bottom:8px">&#x1F504; 一周循环顺序（点击日期切换类型）</div>
       <div class="cycle-row" id="cycleEditor"></div>
       <div class="cycle-picker">
@@ -1238,14 +1259,14 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
     </div>
     <div class="checkin-section">
       <div class="checkin-row" id="ckTrainSummary" style="flex-direction:column;align-items:flex-start;gap:4px">
-        <span style="color:var(--sub);font-size:12px">从碳循环计划页获取</span>
+        <span style="color:var(--sub);font-size:12px">从饮食计划页获取</span>
       </div>
     </div>
 
     <!-- Water Section (read from plan page) -->
     <div class="checkin-section">
       <div class="checkin-row" id="ckWaterSummary">
-        <span style="color:var(--sub);font-size:12px">从碳循环计划页获取</span>
+        <span style="color:var(--sub);font-size:12px">从饮食计划页获取</span>
       </div>
     </div>
 
@@ -1255,7 +1276,7 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
     </div>
     <div class="checkin-section">
       <div class="checkin-row" id="ckPoopSummary">
-        <span style="color:var(--sub);font-size:12px">从碳循环计划页获取</span>
+        <span style="color:var(--sub);font-size:12px">从饮食计划页获取</span>
       </div>
     </div>
 
@@ -1294,6 +1315,15 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
   <div class="search-results" id="searchResults"></div>
 </div>
 
+<!-- Plan Select Modal -->
+<div class="modal-bg" id="planSelectModal" onclick="closePlanSelect(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div style="font-size:18px;font-weight:700;text-align:center;margin-bottom:4px">选择饮食计划</div>
+    <div style="font-size:13px;color:var(--sub);text-align:center;margin-bottom:14px">选择适合你的营养方案</div>
+    <div id="planSelectList"></div>
+  </div>
+</div>
+
 <!-- Bottom Nav -->
 <div class="bottom-nav">
   <div class="nav-item active" onclick="switchPage('plan')"><div class="nav-icon">&#x1F3E0;</div>首页</div>
@@ -1315,6 +1345,16 @@ function safeJSON(key, fallback) {
 }
 
 // ============= CONSTANTS =============
+const PLAN_TYPES = {
+  carbCycle: { id:'carbCycle', name:'凯圣王碳循环计划', icon:'📋', desc:'高高、中中中、低低 7 天碳循环，碳水和脂肪交替变化，蛋白质每天固定。' },
+  tanSir:    { id:'tanSir', name:'谭sir减脂拉锯战', icon:'⚔️', desc:'按体重乘系数计算营养素，根据每周运动量自动匹配碳水、蛋白质和脂肪。' }
+};
+const TAN_BANDS = [
+  { id:'2-3h', label:'2-3h', carb:2.2, protein:1.4, fat:0.8 },
+  { id:'4-5h', label:'4-5h', carb:2.5, protein:1.6, fat:0.9 },
+  { id:'6-7h', label:'6-7h', carb:3.0, protein:1.7, fat:1.0 },
+  { id:'8-9h', label:'8-9h', carb:3.5, protein:1.8, fat:1.0 },
+];
 const BODY_DEFAULTS = {
   endo: { carb: 2.0, fat: 0.8, protein: 1.3 },
   meso: { carb: 2.5, fat: 0.9, protein: 1.5 },
@@ -1368,6 +1408,8 @@ const FOODS = {
 };
 
 // ============= STATE =============
+let currentPlanType = 'carbCycle';
+let tanTrainBand = '2-3h';
 let cycle = ['high','mid','mid','low','mid','high','low'];
 let editCycleIdx = 0;
 let plan = null, curDay = 0, meals = [], water = 0;
@@ -1414,6 +1456,10 @@ function initTsSettings() {
   setBreakfast(s.eatBreakfast !== false, true);
   // Snack position
   setSnackPos(s.snackPos != null ? s.snackPos : ['before-lunch'], true);
+  // Training band (tanSir)
+  if (currentPlanType === 'tanSir') {
+    setTrainBand(tanTrainBand, true);
+  }
 }
 
 function saveTsSettings() {
@@ -1482,6 +1528,111 @@ function setSnackPos(pos, init) {
   }
 }
 
+// ============= PLAN SELECT =============
+function openPlanSelect() {
+  const list = document.getElementById('planSelectList');
+  list.innerHTML = Object.values(PLAN_TYPES).map(p =>
+    `<div class="plan-card ${p.id === currentPlanType ? 'active' : ''}" onclick="selectPlanType('${p.id}')">
+      <div class="plan-card-icon">${p.icon}</div>
+      <div class="plan-card-body">
+        <div class="plan-card-name">${esc(p.name)}${p.id === currentPlanType ? ' <span class="plan-card-badge">✓ 当前使用中</span>' : ''}</div>
+        <div class="plan-card-desc">${esc(p.desc)}</div>
+      </div>
+    </div>`
+  ).join('');
+  document.getElementById('planSelectModal').classList.add('show');
+}
+
+function closePlanSelect(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('planSelectModal').classList.remove('show');
+}
+
+function selectPlanType(id) {
+  currentPlanType = id;
+  document.getElementById('tsPlanName').textContent = PLAN_TYPES[id].name;
+  updatePlanUI();
+  if (id === 'tanSir') {
+    setTrainBand(tanTrainBand, true);
+  }
+  closePlanSelect();
+}
+
+function setTrainBand(id, init) {
+  tanTrainBand = id;
+  const band = TAN_BANDS.find(b => b.id === id);
+  if (band) {
+    document.getElementById('cfCarb').value = band.carb;
+    document.getElementById('cfFat').value = band.fat;
+    document.getElementById('cfProtein').value = band.protein;
+  }
+  document.querySelectorAll('[data-band]').forEach(el => {
+    el.classList.toggle('active', el.dataset.band === id);
+  });
+  if (!init) localStorage.setItem('ts_settings', JSON.stringify(tsSettings));
+}
+
+function updatePlanUI() {
+  const isTan = currentPlanType === 'tanSir';
+  // Profile section visibility
+  document.getElementById('bodyTypeGroup').style.display = isTan ? 'none' : '';
+  document.getElementById('cycleSection').style.display = isTan ? 'none' : '';
+  document.getElementById('tsTrainVolRow').style.display = isTan ? '' : 'none';
+  // Coefficient inputs: readonly for tanSir
+  ['cfCarb','cfFat','cfProtein'].forEach(id => {
+    document.getElementById(id).readOnly = isTan;
+    document.getElementById(id).style.opacity = isTan ? '0.6' : '1';
+  });
+  // Plan page header
+  const titleEl = document.getElementById('planTitle');
+  const subEl = document.getElementById('planSubtitle');
+  if (isTan) {
+    titleEl.textContent = '减脂拉锯战';
+    subEl.textContent = '按体重计算-谭sir（谭成义）版本';
+    subEl.style.display = '';
+  } else {
+    titleEl.textContent = '凯圣王·碳循环计划';
+    subEl.style.display = 'none';
+  }
+  // Day selector & day tag visibility
+  const dayTag = document.getElementById('dayTag');
+  const daySel = document.getElementById('daySelector');
+  const dayBadge = document.getElementById('dDayBadge');
+  if (dayTag) dayTag.style.display = isTan ? 'none' : '';
+  if (daySel) daySel.style.display = isTan ? 'none' : '';
+  if (dayBadge) dayBadge.style.display = isTan ? 'none' : '';
+  // Weight page label
+  const wtLabel = document.getElementById('wtPlanLabel');
+  if (wtLabel) wtLabel.textContent = '🔄 ' + PLAN_TYPES[currentPlanType].name;
+  // Tips
+  const tipsEl = document.getElementById('planTips');
+  if (tipsEl) {
+    if (isTan) {
+      tipsEl.innerHTML = `
+        <li>炒菜油脂需计算：牛油果油、山茶油、椰子油、橄榄油，每5g约4.5g脂肪</li>
+        <li>无法估计烹饪中有多少脂肪的情况下，每餐多补充5g脂肪在总计数里</li>
+        <li>蛋白质全程不变，保证肌肉不流失</li>
+        <li>每天营养素固定，根据训练量调整系数</li>
+        <li>蔬菜每天 ≥ 500g，饮水 ≥ 2.5L</li>
+        <li>不喝酒、不喝含糖饮料，睡前3小时不大量进食</li>`;
+    } else {
+      tipsEl.innerHTML = `
+        <li>炒菜油脂需计算：牛油果油、山茶油、椰子油、橄榄油，每5g约4.5g脂肪</li>
+        <li>无法估计烹饪中有多少脂肪的情况下，每餐多补充5g脂肪在总计数里</li>
+        <li>蛋白质全程不变，保证肌肉不流失</li>
+        <li>高碳日必须配合大重量训练</li>
+        <li>低碳日不要做高强度有氧</li>
+        <li>蔬菜每天 ≥ 500g，饮水 ≥ 2.5L</li>
+        <li>不喝酒、不喝含糖饮料，睡前3小时不大量进食</li>`;
+    }
+  }
+}
+
+function getDayLabel(type) {
+  if (!type || type === 'normal') return '';
+  return DLABELS[type] || type;
+}
+
 // ============= PROFILE PERSISTENCE =============
 function saveProfile() {
   const profile = {
@@ -1494,7 +1645,9 @@ function saveProfile() {
     cfProtein: parseFloat(document.getElementById('cfProtein').value),
     cycle: cycle.slice(),
     mealRatioCarb: mealRatioCarb.slice(),
-    mealRatioProt: mealRatioProt.slice()
+    mealRatioProt: mealRatioProt.slice(),
+    planType: currentPlanType,
+    tanTrainBand: tanTrainBand
   };
   localStorage.setItem('user_profile', JSON.stringify(profile));
   return profile;
@@ -1527,6 +1680,14 @@ function applyProfile(profile) {
     mealRatioProt = profile.mealRatioProt.slice();
     ['mrProtB','mrProtL','mrProtD'].forEach((id, i) => document.getElementById(id).value = mealRatioProt[i]);
     updateMealRatioUI('prot');
+  }
+  // Plan type
+  currentPlanType = profile.planType || 'carbCycle';
+  tanTrainBand = profile.tanTrainBand || '2-3h';
+  document.getElementById('tsPlanName').textContent = PLAN_TYPES[currentPlanType].name;
+  updatePlanUI();
+  if (currentPlanType === 'tanSir') {
+    setTrainBand(tanTrainBand, true);
   }
   renderCycleEditor();
 }
@@ -1609,13 +1770,21 @@ function getMealRatios() {
 function renderCycleEditor() {
   document.getElementById('cycleEditor').innerHTML = cycle.map((t, i) =>
     `<div class="cycle-day ${t} ${i===editCycleIdx?'active':''}" onclick="editCycleIdx=${i};renderCycleEditor()">
-      <span class="wd">${DNAMES[i]}</span><span>${DLABELS[t].replace('日','')}</span></div>`
+      <span class="wd">${DNAMES[i]}</span><span>${(DLABELS[t]||'').replace('日','')}</span></div>`
   ).join('');
 }
 function setCycleType(t) { cycle[editCycleIdx] = t; renderCycleEditor(); }
 
 // ============= GENERATE PLAN =============
 function generatePlan() {
+  if (currentPlanType === 'tanSir') {
+    generateTanSirPlan();
+  } else {
+    generateCarbCyclePlan();
+  }
+}
+
+function generateCarbCyclePlan() {
   const w = parseFloat(document.getElementById('inWeight').value);
   if (!w || w < 30 || w > 200) { alert('请输入有效体重'); return; }
   const carbBase = parseFloat(document.getElementById('cfCarb').value);
@@ -1634,16 +1803,44 @@ function generatePlan() {
   plan = { weight: w, days, wkCarb, wkFat, dProt };
   document.getElementById('setupPrompt').style.display = 'none';
   document.getElementById('planContent').style.display = 'block';
+  updatePlanUI();
   renderDaySel();
-  const todayIdx = (new Date().getDay() + 6) % 7; // 周一=0 ... 周日=6
+  const todayIdx = (new Date().getDay() + 6) % 7;
+  selectDay(todayIdx);
+}
+
+function generateTanSirPlan() {
+  const w = parseFloat(document.getElementById('inWeight').value);
+  if (!w || w < 30 || w > 200) { alert('请输入有效体重'); return; }
+  const carbCoeff = parseFloat(document.getElementById('cfCarb').value);
+  const fatCoeff = parseFloat(document.getElementById('cfFat').value);
+  const protCoeff = parseFloat(document.getElementById('cfProtein').value);
+  const dCarb = Math.round(w * carbCoeff);
+  const dFat = Math.round(w * fatCoeff);
+  const dProt = Math.round(w * protCoeff);
+  const dCal = Math.round(dCarb * 4 + dProt * 4 + dFat * 9);
+
+  const days = DNAMES.map((name, i) => ({
+    type: 'normal', carb: dCarb, fat: dFat, protein: dProt, cal: dCal, name
+  }));
+  plan = { weight: w, days, dProt, planType: 'tanSir' };
+  document.getElementById('setupPrompt').style.display = 'none';
+  document.getElementById('planContent').style.display = 'block';
+  updatePlanUI();
+  renderDaySel();
+  const todayIdx = (new Date().getDay() + 6) % 7;
   selectDay(todayIdx);
 }
 
 // ============= DAY SELECTOR =============
 function renderDaySel() {
+  if (currentPlanType === 'tanSir') {
+    document.getElementById('daySelector').innerHTML = '';
+    return;
+  }
   document.getElementById('daySelector').innerHTML = plan.days.map((d, i) =>
     `<div class="day-btn ${d.type} ${i===curDay?'active':''}" onclick="selectDay(${i})">
-      <div class="dow">${d.name}</div><div class="dtype">${DLABELS[d.type]}</div></div>`
+      <div class="dow">${d.name}</div><div class="dtype">${getDayLabel(d.type)}</div></div>`
   ).join('');
 }
 
@@ -1651,12 +1848,13 @@ function selectDay(i) {
   curDay = i;
   const d = plan.days[i];
   const tag = document.getElementById('dayTag');
-  tag.textContent = DLABELS[d.type];
+  const label = getDayLabel(d.type);
+  tag.textContent = label;
   tag.className = 'day-tag ' + d.type;
   document.querySelectorAll('.day-btn').forEach((b, j) => b.classList.toggle('active', j===i));
   // Dashboard
   const badge = document.getElementById('dDayBadge');
-  badge.textContent = DLABELS[d.type];
+  badge.textContent = label;
   badge.className = 'dash-day-badge ' + d.type;
   document.getElementById('dTotal').textContent = d.cal;
   document.getElementById('dmProteinT').textContent = d.protein;
@@ -1890,7 +2088,7 @@ function renderMeals() {
     const mc = mealMacro(mi,'carb'), mp = mealMacro(mi,'protein'), mf = mealMacro(mi,'fat');
     const mkcal = Math.round(mc*4+mp*4+mf*9);
     return `<div class="meal-card fade-in${m.isSnack?' snack-card':''}">
-      <div class="meal-hd" onclick="toggleMeal(${mi})">
+      <div class="meal-hd meal-bg-${mi}" onclick="toggleMeal(${mi})">
         <div class="meal-hd-left"><span>${m.icon}</span><h3>${m.name}</h3></div>
         <div style="display:flex;align-items:center;gap:6px">
           <div class="meal-macros"><span class="mc">碳${mc}g</span><span class="mp">蛋${mp}g</span><span class="mf">脂${mf}g</span><span style="background:#FFF3E0;color:var(--orange);padding:2px 7px;border-radius:10px">${mkcal}kcal</span></div>
@@ -1940,16 +2138,10 @@ function renderFoodItem(mi, fi) {
   return `<div class="food-item">
     <div class="fi-top">
       <div class="fi-name"><span>${esc(f.emoji)}</span>${esc(f.name)}</div>
-      <div style="display:flex;align-items:center">
-        <div class="fi-wt"><b>${f.weight}</b><small> g</small></div>
+      <div class="fi-ctrls">
+        <input class="fi-input" type="number" value="${f.weight}" onchange="setW(${mi},${fi},this.value)" min="0" step="5">
+        <span class="fi-unit">g</span>
       </div>
-    </div>
-    <div class="fi-ctrls">
-      <button class="fi-btn" onclick="adj(${mi},${fi},-50)">-</button><span class="fi-step">50</span>
-      <button class="fi-btn" onclick="adj(${mi},${fi},-5)">-</button>
-      <input class="fi-input" type="number" value="${f.weight}" onchange="setW(${mi},${fi},this.value)" min="0" step="5">
-      <button class="fi-btn" onclick="adj(${mi},${fi},5)">+</button><span class="fi-step">5</span>
-      <button class="fi-btn" onclick="adj(${mi},${fi},50)">+</button>
     </div>
     <div class="fi-macros">
       <span><span class="dot c"></span>碳水${foodMacro(f,'carb')}g</span>
@@ -2770,7 +2962,7 @@ function submitCheckin() {
   // Diet (yesterday)
   text += `${document.getElementById('ckDivDiet').value}\n`;
   if (yestData && yestData.meals && yestData.meals.length) {
-    if (yestData.dayType) text += `📋 ${DLABELS[yestData.dayType]} 饮食\n`;
+    if (yestData.dayType) { const dl = getDayLabel(yestData.dayType); if (dl) text += `📋 ${dl} 饮食\n`; }
     yestData.meals.forEach(m => {
       const kcal = Math.round(m.mc*4+m.mp*4+m.mf*9);
       text += `\n${m.icon} ${m.name}（碳${m.mc}g 蛋${m.mp}g 脂${m.mf}g ${kcal}kcal）\n`;
@@ -2968,7 +3160,6 @@ function loadHistory() {
   const start = histPage * HIST_WEEKS_PER_PAGE;
   const pageWeeks = weeksWithData.slice(start, start + HIST_WEEKS_PER_PAGE);
 
-  const DLABELS_MAP = { high: '高碳日', mid: '中碳日', low: '低碳日' };
   const WDNAMES = ['周日','周一','周二','周三','周四','周五','周六'];
 
   let html = '';
@@ -2996,7 +3187,7 @@ function loadHistory() {
         return;
       }
       const d = day.data;
-      const typeLabel = DLABELS_MAP[d.dayType] || d.dayType || '--';
+      const typeLabel = getDayLabel(d.dayType) || d.dayType || '--';
       const typeClass = d.dayType || '';
 
       // Compute totals from meals
@@ -3077,7 +3268,7 @@ function renderHistEmpty() {
   document.getElementById('histContent').innerHTML = `<div class="card hist-empty">
     <div class="hist-empty-icon">&#x1F4CB;</div>
     <div style="font-size:15px;font-weight:600;margin-bottom:8px">暂无历史记录</div>
-    <div>完成每日饮食记录后，这里将按周展示您的碳循环历史计划</div>
+    <div>完成每日饮食记录后，这里将按周展示您的历史饮食计划</div>
   </div>`;
   document.getElementById('histPager').innerHTML = '';
 }
