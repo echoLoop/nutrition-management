@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Keep Going - 凯圣王碳循环计划</title>
   <script>/**
  * 中国常见食物营养成分数据库
@@ -427,6 +427,7 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
     /* === MEAL SECTION === */
     .meal-card{background:var(--card);margin:10px 12px;border-radius:var(--radius);overflow:hidden;
       box-shadow:var(--shadow);border:1px solid rgba(228,232,238,.5)}
+    .meal-card.snack-card{border:1.5px dashed #FFB74D;background:linear-gradient(135deg,#FFFDE7,#FFF8E1)}
     .meal-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;
       transition:background .15s}
     .meal-hd:active{background:#F8F9FB}
@@ -467,8 +468,8 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
       transition:all .15s;color:var(--text)}
     .fi-btn:active{background:var(--green-light);border-color:var(--green);transform:scale(.9)}
     .fi-step{font-size:10px;color:var(--sub);font-weight:500}
-    .fi-input{width:50px;text-align:center;border:1.5px solid var(--border);border-radius:8px;
-      padding:4px;font-size:14px;font-weight:700;background:#fff;transition:border-color .2s;color:var(--text)}
+    .fi-input{width:60px;text-align:center;border:1.5px solid var(--border);border-radius:8px;
+      padding:4px 2px;font-size:14px;font-weight:700;background:#fff;transition:border-color .2s;color:var(--text)}
     .fi-input:focus{border-color:var(--green);outline:none;box-shadow:0 0 0 3px rgba(67,185,127,.12)}
     .fi-macros{display:flex;gap:10px;font-size:11px;color:var(--sub);font-weight:500}
     .fi-macros span{display:flex;align-items:center;gap:3px}
@@ -508,6 +509,15 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
     /* === VEGGIE/PROTEIN HINT === */
     .hint-row{font-size:11px;color:var(--sub);padding:8px 0;border-top:1px dashed var(--border);margin-top:8px;
       font-weight:500}
+
+    /* === VEGGIE FIXED === */
+    .veggie-fixed{margin-top:12px;padding:10px 0;border-top:1px dashed var(--border)}
+    .veggie-fixed-title{font-weight:700;font-size:14px;margin-bottom:8px;color:#333}
+    .veggie-fixed-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap}
+    .veggie-label{font-weight:600;font-size:13px;color:#555;white-space:nowrap}
+    .veggie-tag{display:inline-block;padding:4px 12px;border-radius:14px;font-size:12px;
+      background:#E8F5E9;color:#2E7D32;border:1px solid #C8E6C9;font-weight:500}
+    .veggie-tag.raw{background:#FFF8E1;color:#F57F17;border-color:#FFE082}
 
     /* === GAP SUMMARY === */
     .gap-card{margin:10px 12px;border-radius:var(--radius);padding:16px 18px;
@@ -727,6 +737,33 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
     .poop-btn:active{transform:scale(.93)}
     .poop-btn.sel{background:var(--orange-light);border-color:var(--orange);color:var(--orange);font-weight:600;
       box-shadow:0 2px 8px rgba(245,166,35,.15)}
+
+    /* === NUTRITION EXCESS MODAL === */
+    .nutrient-alert-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;
+      background:rgba(0,0,0,.45);z-index:202;justify-content:center;align-items:center;
+      backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+    .nutrient-alert-overlay.show{display:flex}
+    .nutrient-alert-box{background:#fff;width:calc(100% - 48px);max-width:380px;border-radius:20px;
+      padding:24px 22px 20px;animation:fadeIn .3s cubic-bezier(.32,.72,.37,1.02);
+      box-shadow:0 8px 40px rgba(0,0,0,.18);position:relative}
+    .nutrient-alert-close{position:absolute;top:14px;right:16px;width:32px;height:32px;
+      border-radius:50%;background:#F2F3F5;border:none;font-size:16px;font-weight:700;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;color:#666;transition:.2s}
+    .nutrient-alert-close:active{background:#E0E0E0;transform:scale(.9)}
+    .nutrient-alert-label{font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px}
+    .nutrient-alert-title{font-size:20px;font-weight:800;color:var(--text);margin-bottom:6px}
+    .nutrient-alert-desc{font-size:14px;color:var(--sub);margin-bottom:16px}
+    .nutrient-alert-card{background:#FAFAFA;border-radius:14px;padding:14px 16px;margin-bottom:12px;
+      border:1px solid #F0F0F0}
+    .nutrient-alert-tags{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+    .nutrient-alert-tag{padding:4px 12px;border-radius:8px;font-size:12px;font-weight:700}
+    .nutrient-alert-tag.meal{background:var(--orange-light);color:var(--orange)}
+    .nutrient-alert-tag.over{background:var(--red-light);color:var(--red)}
+    .nutrient-alert-msg{font-size:14px;color:#444;line-height:1.6}
+    .nutrient-alert-btn{display:block;width:calc(100% - 40px);margin:8px auto 0;padding:14px;
+      border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;
+      background:#1A1A1A;color:#fff;transition:.2s}
+    .nutrient-alert-btn:active{background:#333;transform:scale(.98)}
 
     /* === CHECK-IN FAB === */
     .checkin-fab{position:fixed;right:18px;bottom:90px;width:54px;height:54px;border-radius:50%;
@@ -1082,7 +1119,7 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
     <div class="ts-row">
       <div class="ts-label">加餐位置</div>
       <div class="ts-toggle-group">
-        <div class="ts-toggle-btn active" data-snack="before-lunch" onclick="setSnackPos('before-lunch')">午餐前</div>
+        <div class="ts-toggle-btn" data-snack="before-lunch" onclick="setSnackPos('before-lunch')">午餐前</div>
         <div class="ts-toggle-btn" data-snack="before-dinner" onclick="setSnackPos('before-dinner')">晚餐前</div>
         <div class="ts-toggle-btn" data-snack="after-dinner" onclick="setSnackPos('after-dinner')">晚餐后</div>
       </div>
@@ -1176,19 +1213,19 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
 
     <div class="checkin-section" style="position:relative">
       <div class="checkin-section-hd">&#x1F4CD; 体重数据</div>
-      <div class="checkin-row"><label><span class="ck-emoji" data-key="startW" onclick="openEmojiPicker(this)">🌱</span> 初始体重</label><span class="cr-val neutral" id="ckStartW">--</span><small>kg</small></div>
-      <div class="checkin-row"><label><span class="ck-emoji" data-key="goalW" onclick="openEmojiPicker(this)">🏋️</span> 目标体重</label><span class="cr-val neutral" id="ckGoalW">--</span><small>kg</small></div>
-      <div class="checkin-row"><label><span class="ck-emoji" data-key="yestW" onclick="openEmojiPicker(this)">🖼</span> 昨日体重</label><input type="number" id="ckYestW" placeholder="输入" step="0.01" style="width:80px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:14px;text-align:center;font-weight:600" oninput="updateCheckinCalc()"></div>
-      <div class="checkin-row"><label><span class="ck-emoji" data-key="todayW" onclick="openEmojiPicker(this)">🍊</span> 今日称重</label><input type="number" id="ckTodayW" placeholder="输入" step="0.01"></div>
-      <div class="checkin-row"><label><span class="ck-emoji" data-key="dayChange" onclick="openEmojiPicker(this)">📏</span> 体重幅度</label><span class="cr-val" id="ckDayChange">--</span><small>kg</small></div>
+      <div class="checkin-row"><label><span class="ck-emoji" data-key="startW" onclick="openEmojiPicker(this,event)">🌱</span> 初始体重</label><span class="cr-val neutral" id="ckStartW">--</span><small>kg</small></div>
+      <div class="checkin-row"><label><span class="ck-emoji" data-key="goalW" onclick="openEmojiPicker(this,event)">🏋️</span> 目标体重</label><span class="cr-val neutral" id="ckGoalW">--</span><small>kg</small></div>
+      <div class="checkin-row"><label><span class="ck-emoji" data-key="yestW" onclick="openEmojiPicker(this,event)">🖼</span> 昨日体重</label><input type="number" id="ckYestW" placeholder="输入" step="0.01" style="width:80px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:14px;text-align:center;font-weight:600" oninput="updateCheckinCalc()"></div>
+      <div class="checkin-row"><label><span class="ck-emoji" data-key="todayW" onclick="openEmojiPicker(this,event)">🍊</span> 今日称重</label><input type="number" id="ckTodayW" placeholder="输入" step="0.01"></div>
+      <div class="checkin-row"><label><span class="ck-emoji" data-key="dayChange" onclick="openEmojiPicker(this,event)">📏</span> 体重幅度</label><span class="cr-val" id="ckDayChange">--</span><small>kg</small></div>
       <!-- Emoji picker popup (shared) -->
       <div class="emoji-picker" id="emojiPicker"></div>
     </div>
 
     <!-- Change Section -->
     <div class="checkin-section" style="position:relative">
-      <div class="checkin-row"><label><span class="ck-emoji" data-key="cumChange" onclick="openEmojiPicker(this)">📉</span> 累计变化</label><span class="cr-val" id="ckCumChange">--</span><small>kg</small></div>
-      <div class="checkin-row"><label><span class="ck-emoji" data-key="toGoal" onclick="openEmojiPicker(this)">🎯</span> 距离目标</label><span class="cr-val" id="ckToGoal">--</span><small>kg</small></div>
+      <div class="checkin-row"><label><span class="ck-emoji" data-key="cumChange" onclick="openEmojiPicker(this,event)">📉</span> 累计变化</label><span class="cr-val" id="ckCumChange">--</span><small>kg</small></div>
+      <div class="checkin-row"><label><span class="ck-emoji" data-key="toGoal" onclick="openEmojiPicker(this,event)">🎯</span> 距离目标</label><span class="cr-val" id="ckToGoal">--</span><small>kg</small></div>
     </div>
 
     <!-- Diet Section -->
@@ -1239,6 +1276,18 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
   </div>
 </div>
 
+<!-- Nutrient Excess Alert Modal -->
+<div class="nutrient-alert-overlay" id="nutrientAlertOverlay" onclick="if(event.target===this)closeNutrientAlert()">
+  <div class="nutrient-alert-box">
+    <button class="nutrient-alert-close" onclick="closeNutrientAlert()">X</button>
+    <div class="nutrient-alert-label">摄入提醒</div>
+    <div class="nutrient-alert-title">营养超出提醒</div>
+    <div class="nutrient-alert-desc" id="nutrientAlertDesc"></div>
+    <div id="nutrientAlertCards"></div>
+    <button class="nutrient-alert-btn" onclick="closeNutrientAlert()">知道了</button>
+  </div>
+</div>
+
 <!-- Search Food Modal -->
 <div class="search-modal" id="searchModal">
   <div class="search-top">
@@ -1258,6 +1307,17 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
 </div>
 
 <script>
+// ============= UTILS =============
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+function safeJSON(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch(e) { return fallback; }
+}
+
 // ============= CONSTANTS =============
 const BODY_DEFAULTS = {
   endo: { carb: 2.0, fat: 0.8, protein: 1.3 },
@@ -1275,7 +1335,7 @@ const DLABELS = { high:'高碳日', mid:'中碳日', low:'低碳日' };
 
 const FOODS = {
   staple: [
-    { name:'糙米(生重)', emoji:'🍚', carb:73, protein:7.5, fat:2.7 },
+    { name:'糙米', emoji:'🍚', carb:73, protein:7.5, fat:2.7 },
     { name:'红薯', emoji:'🍠', carb:21, protein:1.6, fat:0.1 },
     { name:'燕麦', emoji:'🥣', carb:62, protein:13, fat:6.5 },
     { name:'玉米', emoji:'🌽', carb:19, protein:3.3, fat:1.2 },
@@ -1315,9 +1375,9 @@ const FOODS = {
 let cycle = ['high','mid','mid','low','mid','high','low'];
 let editCycleIdx = 0;
 let plan = null, curDay = 0, meals = [], water = 0;
-let weightRecords = JSON.parse(localStorage.getItem('wt_records') || '[]');
+let weightRecords = safeJSON('wt_records', []);
 // User's shortcut foods per category (added from food DB), persisted
-let userFoods = JSON.parse(localStorage.getItem('user_foods') || '{"staple":[],"protein":[],"fat":[],"veggie":[]}');
+let userFoods = safeJSON('user_foods', {staple:[],protein:[],fat:[],veggie:[]});
 let searchMealIdx = null; // which meal opened the search
 let searchCatIdx = null;  // which meal-category opened the search
 
@@ -1343,7 +1403,7 @@ function switchPage(p) {
 }
 
 // ============= TRAINING SETTINGS =============
-let tsSettings = JSON.parse(localStorage.getItem('ts_settings') || '{}');
+let tsSettings = safeJSON('ts_settings', {});
 
 function initTsSettings() {
   const s = tsSettings;
@@ -1357,7 +1417,7 @@ function initTsSettings() {
   // Breakfast
   setBreakfast(s.eatBreakfast !== false, true);
   // Snack position
-  setSnackPos(s.snackPos || 'before-lunch', true);
+  setSnackPos(s.snackPos != null ? s.snackPos : ['before-lunch'], true);
 }
 
 function saveTsSettings() {
@@ -1404,11 +1464,26 @@ function setBreakfast(eat, init) {
 }
 
 function setSnackPos(pos, init) {
-  tsSettings.snackPos = pos;
+  if (!Array.isArray(tsSettings.snackPos)) tsSettings.snackPos = [];
+  if (init) {
+    // init mode: set from saved data
+    if (typeof pos === 'string') tsSettings.snackPos = pos ? [pos] : [];
+    else if (Array.isArray(pos)) tsSettings.snackPos = pos.slice();
+  } else {
+    // toggle mode
+    const idx = tsSettings.snackPos.indexOf(pos);
+    if (idx >= 0) tsSettings.snackPos.splice(idx, 1);
+    else tsSettings.snackPos.push(pos);
+  }
+  const arr = tsSettings.snackPos;
   document.querySelectorAll('[data-snack]').forEach(el => {
-    el.classList.toggle('active', el.dataset.snack === pos);
+    el.classList.toggle('active', arr.includes(el.dataset.snack));
   });
-  if (!init) localStorage.setItem('ts_settings', JSON.stringify(tsSettings));
+  if (!init) {
+    localStorage.setItem('ts_settings', JSON.stringify(tsSettings));
+    // Rebuild meals to sync snack positions
+    if (plan) { buildMeals(plan.days[curDay]); renderMeals(); updateSummary(); }
+  }
 }
 
 // ============= PROFILE PERSISTENCE =============
@@ -1430,9 +1505,7 @@ function saveProfile() {
 }
 
 function loadProfile() {
-  const raw = localStorage.getItem('user_profile');
-  if (!raw) return null;
-  try { return JSON.parse(raw); } catch(e) { return null; }
+  return safeJSON('user_profile', null);
 }
 
 function getProfileName() {
@@ -1607,21 +1680,40 @@ const MEAL_CFG = [
 
 function buildMeals(day) {
   const ratios = getMealRatios();
-  meals = MEAL_CFG.map((m, mi) => ({
-    ...m,
+  const baseMeals = MEAL_CFG.map((m, mi) => ({
+    ...m, baseIdx: mi,
     targetC: Math.round(day.carb * ratios.carb[mi]),
     targetP: Math.round(day.protein * ratios.prot[mi]),
     targetF: Math.round(day.fat * m.ratio),
     foods: [], expanded: true,
-    sel: { staple: null, protein: null, fat: null, veggie: null },
+    sel: { staple: [], protein: [], fat: [], veggie: [] },
     eggTotal: 0, eggYolk: 0,
     powderOn: false, powderG: 0, powderConc: 76
   }));
+  // Insert snack entries based on snackPos settings
+  const snackArr = Array.isArray(tsSettings.snackPos) ? tsSettings.snackPos : [];
+  const snackEntry = () => ({
+    name: '加餐', icon: '🍌', isSnack: true,
+    targetC: 0, targetP: 0, targetF: 0,
+    foods: [], expanded: true,
+    sel: { staple: [], protein: [], fat: [], veggie: [] },
+    eggTotal: 0, eggYolk: 0,
+    powderOn: false, powderG: 0, powderConc: 76
+  });
+  meals = [];
+  meals.push(baseMeals[0]); // 早餐
+  if (snackArr.includes('before-lunch')) meals.push(snackEntry());
+  meals.push(baseMeals[1]); // 午餐
+  if (snackArr.includes('before-dinner')) meals.push(snackEntry());
+  meals.push(baseMeals[2]); // 晚餐
+  if (snackArr.includes('after-dinner')) meals.push(snackEntry());
+  // Auto-select default foods for base meals only
   meals.forEach((m, mi) => {
-    selectFood(mi, 'staple', mi===0?6:(mi===1?0:5), true);
-    selectFood(mi, 'protein', mi===0?4:(mi===1?0:1), true);
-    selectFood(mi, 'veggie', mi, true);
-    if (plan.days[curDay].type === 'low' && mi > 0) selectFood(mi, 'fat', 0, true);
+    if (m.isSnack) return;
+    const baseIdx = m.baseIdx;
+    selectFood(mi, 'staple', baseIdx===0?6:(baseIdx===1?0:5), true);
+    selectFood(mi, 'protein', baseIdx===0?4:(baseIdx===1?0:1), true);
+    if (plan.days[curDay].type === 'low' && baseIdx > 0) selectFood(mi, 'fat', 0, true);
   });
 }
 
@@ -1633,23 +1725,50 @@ function getFood(cat, idx) {
 
 function selectFood(mi, cat, idx, init) {
   const meal = meals[mi];
-  const prev = meal.sel[cat];
-  if (prev === idx && !init) {
+  const selArr = meal.sel[cat];
+  const alreadySel = selArr.indexOf(idx);
+  if (alreadySel !== -1 && !init) {
     meal.foods = meal.foods.filter(f => !(f._cat === cat && f._idx === idx));
-    meal.sel[cat] = null;
-  } else {
-    meal.foods = meal.foods.filter(f => f._cat !== cat);
+    selArr.splice(alreadySel, 1);
+  } else if (alreadySel === -1) {
     const food = getFood(cat, idx);
     if (!food) return;
-    let w = 150;
-    if (cat === 'staple' && food.carb > 0) w = Math.max(50, Math.min(400, Math.round(meal.targetC / food.carb * 100)));
-    else if (cat === 'protein' && food.protein > 0) w = Math.max(50, Math.min(400, Math.round(meal.targetP / food.protein * 100)));
-    else if (cat === 'fat' && food.fat > 0) w = Math.max(10, Math.min(100, Math.round(meal.targetF / food.fat * 100 * .5)));
-    else w = 150;
-    meal.foods.push({ ...food, weight: w, _cat: cat, _idx: idx });
-    meal.sel[cat] = idx;
+    meal.foods.push({ ...food, weight: 150, _cat: cat, _idx: idx });
+    selArr.push(idx);
   }
+  recalcWeights(mi);
   if (!init) { renderMeals(); updateSummary(); }
+}
+
+function recalcWeights(mi) {
+  const m = meals[mi];
+  const eggC = eggMacro(mi, 'carb'), eggP = eggMacro(mi, 'protein'), eggF = eggMacro(mi, 'fat');
+  const pwdC = powderMacro(mi, 'carb'), pwdP = powderMacro(mi, 'protein'), pwdF = powderMacro(mi, 'fat');
+  // Remaining targets after egg + powder
+  const remC = Math.max(0, m.targetC - eggC - pwdC);
+  const remP = Math.max(0, m.targetP - eggP - pwdP);
+  const remF = Math.max(0, m.targetF - eggF - pwdF);
+  // Recalc each category
+  const cats = ['staple', 'protein', 'fat'];
+  const targets = { staple: remC, protein: remP, fat: remF };
+  const macroKeys = { staple: 'carb', protein: 'protein', fat: 'fat' };
+  const minMax = { staple: [50, 400], protein: [50, 400], fat: [10, 100] };
+  cats.forEach(cat => {
+    const catFoods = m.foods.filter(f => f._cat === cat);
+    if (!catFoods.length) return;
+    const target = targets[cat];
+    const key = macroKeys[cat];
+    const n = catFoods.length;
+    const share = target / n;
+    catFoods.forEach(f => {
+      const density = f[key];
+      if (density > 0) {
+        let w = Math.round(share / density * 100 * 10) / 10;
+        w = Math.max(minMax[cat][0], Math.min(minMax[cat][1], w));
+        f.weight = Math.round(w * 10) / 10;
+      }
+    });
+  });
 }
 
 function eggMacro(mi, type) {
@@ -1675,7 +1794,7 @@ function renderMeals() {
   document.getElementById('mealsBox').innerHTML = meals.map((m, mi) => {
     const mc = mealMacro(mi,'carb'), mp = mealMacro(mi,'protein'), mf = mealMacro(mi,'fat');
     const mkcal = Math.round(mc*4+mp*4+mf*9);
-    return `<div class="meal-card fade-in">
+    return `<div class="meal-card fade-in${m.isSnack?' snack-card':''}">
       <div class="meal-hd" onclick="toggleMeal(${mi})">
         <div class="meal-hd-left"><span>${m.icon}</span><h3>${m.name}</h3></div>
         <div style="display:flex;align-items:center;gap:6px">
@@ -1687,10 +1806,13 @@ function renderMeals() {
         ${renderCat(mi, 'staple', '🍚 碳水来源')}
         ${renderCat(mi, 'protein', '🥩 蛋白质来源')}
         ${renderCat(mi, 'fat', '🥑 脂肪来源')}
-        ${renderCat(mi, 'veggie', '🥦 蔬菜')}
-        ${m.foods.map((f, fi) => renderFoodItem(mi, fi)).join('')}
         ${renderEggPowder(mi)}
-        <div class="hint-row">蛋白质(可选) · 每日目标 ${plan.dProt}g &nbsp;|&nbsp; 蔬菜推荐200-300g</div>
+        <div class="veggie-fixed">
+          <div class="veggie-fixed-title">🥦 蔬菜（推荐200-300g）</div>
+          <div class="veggie-fixed-row"><span class="veggie-label">炒：</span><span class="veggie-tag">西兰花</span><span class="veggie-tag">羽衣甘蓝</span><span class="veggie-tag">苋菜</span><span class="veggie-tag">菠菜</span><span class="veggie-tag">菇类</span><span class="veggie-tag">芦笋</span></div>
+          <div class="veggie-fixed-row"><span class="veggie-label">生：</span><span class="veggie-tag raw">萝卜</span><span class="veggie-tag raw">西红柿</span><span class="veggie-tag raw">彩椒</span></div>
+        </div>
+        <div class="hint-row">蛋白质(可选) · 每日目标 ${plan.dProt}g</div>
       </div>
     </div>`;
   }).join('');
@@ -1699,15 +1821,22 @@ function renderMeals() {
 function renderCat(mi, cat, label) {
   const sel = meals[mi].sel[cat];
   const builtIn = FOODS[cat].map((f, i) =>
-    `<span class="food-tag ${sel===i?'sel':''}" onclick="selectFood(${mi},'${cat}',${i})">${f.emoji} ${f.name}</span>`
+    `<span class="food-tag ${sel.includes(i)?'sel':''}" onclick="selectFood(${mi},'${cat}',${i})">${f.emoji} ${f.name}</span>`
   ).join('');
   const extras = (userFoods[cat]||[]).map((f, i) => {
     const ci = FOODS[cat].length + i;
-    return `<span class="food-tag custom ${sel===ci?'sel':''}" onclick="selectFood(${mi},'${cat}',${ci})">${f.emoji} ${f.name}<span class="del-x" onclick="event.stopPropagation();delUserFood('${cat}',${i})" title="移除">×</span></span>`;
+    return `<span class="food-tag custom ${sel.includes(ci)?'sel':''}" onclick="selectFood(${mi},'${cat}',${ci})">${esc(f.emoji)} ${esc(f.name)}<span class="del-x" onclick="event.stopPropagation();delUserFood('${cat}',${i})" title="移除">×</span></span>`;
   }).join('');
+  // Render selected food items inline under this category
+  const catFoods = meals[mi].foods
+    .map((f, fi) => ({ f, fi }))
+    .filter(({ f }) => f._cat === cat)
+    .map(({ f, fi }) => renderFoodItem(mi, fi))
+    .join('');
   return `<div class="food-cat">
     <div class="food-cat-hd">${label}</div>
     <div class="food-tags">${builtIn}${extras}<span class="food-tag add" onclick="openSearch('${cat}',${mi})">+ 添加</span></div>
+    ${catFoods}
   </div>`;
 }
 
@@ -1715,9 +1844,9 @@ function renderFoodItem(mi, fi) {
   const f = meals[mi].foods[fi];
   return `<div class="food-item">
     <div class="fi-top">
-      <div class="fi-name"><span>${f.emoji}</span>${f.name}</div>
+      <div class="fi-name"><span>${esc(f.emoji)}</span>${esc(f.name)}</div>
       <div style="display:flex;align-items:center">
-        <div class="fi-wt"><b>${f.weight}</b><small> g ${f._cat==='staple'?'(生重)':''}</small></div>
+        <div class="fi-wt"><b>${f.weight}</b><small> g</small></div>
       </div>
     </div>
     <div class="fi-ctrls">
@@ -1736,8 +1865,8 @@ function renderFoodItem(mi, fi) {
   </div>`;
 }
 
-function adj(mi, fi, d) { meals[mi].foods[fi].weight = Math.max(0, meals[mi].foods[fi].weight + d); renderMeals(); updateSummary(); }
-function setW(mi, fi, v) { meals[mi].foods[fi].weight = Math.max(0, parseInt(v)||0); renderMeals(); updateSummary(); }
+function adj(mi, fi, d) { meals[mi].foods[fi].weight = Math.max(0, meals[mi].foods[fi].weight + d); renderMeals(); updateSummary(); checkNutrientExcess(mi); }
+function setW(mi, fi, v) { meals[mi].foods[fi].weight = Math.max(0, parseInt(v)||0); renderMeals(); updateSummary(); checkNutrientExcess(mi); }
 
 function renderEggPowder(mi) {
   const m = meals[mi];
@@ -1790,11 +1919,11 @@ function adjEgg(mi, type, d) {
   } else {
     m.eggYolk = Math.max(0, Math.min(m.eggTotal, m.eggYolk + d));
   }
-  renderMeals(); updateSummary();
+  recalcWeights(mi); renderMeals(); updateSummary();
 }
-function togglePowder(mi, on) { meals[mi].powderOn = on; renderMeals(); updateSummary(); }
-function setPowderG(mi, v) { meals[mi].powderG = Math.max(0, parseInt(v)||0); renderMeals(); updateSummary(); }
-function setPowderConc(mi, c) { meals[mi].powderConc = c; renderMeals(); updateSummary(); }
+function togglePowder(mi, on) { meals[mi].powderOn = on; recalcWeights(mi); renderMeals(); updateSummary(); }
+function setPowderG(mi, v) { meals[mi].powderG = Math.max(0, parseInt(v)||0); recalcWeights(mi); renderMeals(); updateSummary(); }
+function setPowderConc(mi, c) { meals[mi].powderConc = c; recalcWeights(mi); renderMeals(); updateSummary(); }
 function toggleMeal(mi) { meals[mi].expanded = !meals[mi].expanded; renderMeals(); }
 
 // ============= SUMMARY =============
@@ -1837,6 +1966,46 @@ function updateSummary() {
   document.getElementById('tipBar').innerHTML = tips.length ? tips.join(' · ') : '&#x2705; 营养素分配均衡！';
   renderGapSummary(d, tc, tp, tf);
   saveDailyData();
+}
+
+// ============= NUTRIENT EXCESS ALERT =============
+let _alertDismissed = {};
+function checkNutrientExcess(mi) {
+  const m = meals[mi];
+  if (!m || m.isSnack) return;
+  const mc = mealMacro(mi, 'carb'), mp = mealMacro(mi, 'protein'), mf = mealMacro(mi, 'fat');
+  const items = [];
+  if (m.targetC > 0 && mc > m.targetC) {
+    const over = Math.round((mc - m.targetC) * 10) / 10;
+    items.push('碳水超出本餐目标约' + over + 'g');
+  }
+  if (m.targetP > 0 && mp > m.targetP) {
+    const over = Math.round((mp - m.targetP) * 10) / 10;
+    items.push('蛋白质超出本餐目标约' + over + 'g');
+  }
+  if (m.targetF > 0 && mf > m.targetF) {
+    const over = Math.round((mf - m.targetF) * 10) / 10;
+    items.push('脂肪超出本餐目标约' + over + 'g');
+  }
+  if (!items.length) { delete _alertDismissed[mi]; return; }
+  const key = mi + ':' + items.join(',');
+  if (_alertDismissed[mi] === key) return;
+  const totalItems = items.length;
+  document.getElementById('nutrientAlertDesc').textContent =
+    '当前有 ' + totalItems + ' 项摄入偏高，建议适当下调。';
+  document.getElementById('nutrientAlertCards').innerHTML =
+    `<div class="nutrient-alert-card">
+      <div class="nutrient-alert-tags">
+        <span class="nutrient-alert-tag meal">${m.name}</span>
+        <span class="nutrient-alert-tag over">营养超出</span>
+      </div>
+      <div class="nutrient-alert-msg">当前${items.join('；')}，请适当下调。</div>
+    </div>`;
+  _alertDismissed[mi] = key;
+  document.getElementById('nutrientAlertOverlay').classList.add('show');
+}
+function closeNutrientAlert() {
+  document.getElementById('nutrientAlertOverlay').classList.remove('show');
 }
 
 function renderGapSummary(d, tc, tp, tf) {
@@ -1963,9 +2132,9 @@ function doSearch() {
       const dbIdx = FOOD_DB.indexOf(f);
       html += `<div class="search-item ${isAdded?'added':''}" onclick="addFromDB(${dbIdx})">
         <div class="si-left">
-          <span class="si-emoji">${f.emoji}</span>
+          <span class="si-emoji">${esc(f.emoji)}</span>
           <div class="si-info">
-            <div class="si-name">${f.name}</div>
+            <div class="si-name">${esc(f.name)}</div>
             <div class="si-macros">
               <span>碳${f.carb}g</span>
               <span>蛋${f.protein}g</span>
@@ -2019,13 +2188,19 @@ function delUserFood(cat, ci) {
   const globalIdx = FOODS[cat].length + ci;
   if (meals.length) {
     meals.forEach(m => {
-      if (m.sel[cat] === globalIdx) {
+      const selArr = m.sel[cat];
+      const pos = selArr.indexOf(globalIdx);
+      if (pos !== -1) {
         m.foods = m.foods.filter(f => !(f._cat === cat && f._idx === globalIdx));
-        m.sel[cat] = null;
-      } else if (m.sel[cat] > globalIdx) {
-        const old = m.sel[cat];
-        m.foods.forEach(f => { if (f._cat === cat && f._idx === old) f._idx = old - 1; });
-        m.sel[cat] = old - 1;
+        selArr.splice(pos, 1);
+      }
+      // Adjust indices greater than removed
+      for (let j = 0; j < selArr.length; j++) {
+        if (selArr[j] > globalIdx) {
+          const old = selArr[j];
+          m.foods.forEach(f => { if (f._cat === cat && f._idx === old) f._idx = old - 1; });
+          selArr[j] = old - 1;
+        }
       }
     });
   }
@@ -2036,17 +2211,17 @@ function delUserFood(cat, ci) {
 
 // ============= TRAINING =============
 const BUILT_IN_TRAINS = ['胸','背','肩','手臂','核心','臀','腿','髋','爬坡','椭圆仪','爬楼机'];
-let customTrains = JSON.parse(localStorage.getItem('custom_trains') || '[]');
+let customTrains = safeJSON('custom_trains', []);
 let selectedTrains = new Set();
 
 function renderTrainTags() {
   const box = document.getElementById('trainTags');
   if (!box) return;
   let html = BUILT_IN_TRAINS.map(t =>
-    `<span class="train-tag ${selectedTrains.has(t)?'sel':''}" onclick="toggleTrain('${t}')">${t}</span>`
+    `<span class="train-tag ${selectedTrains.has(t)?'sel':''}" onclick="toggleTrain('${esc(t)}')">${esc(t)}</span>`
   ).join('');
   html += customTrains.map(t =>
-    `<span class="train-tag custom-tag ${selectedTrains.has(t)?'sel':''}" onclick="toggleTrain('${t}')">${t}<span class="tag-del" onclick="event.stopPropagation();delCustomTrain('${t}')">×</span></span>`
+    `<span class="train-tag custom-tag ${selectedTrains.has(t)?'sel':''}" onclick="toggleTrain('${esc(t)}')">${esc(t)}<span class="tag-del" onclick="event.stopPropagation();delCustomTrain('${esc(t)}')">×</span></span>`
   ).join('');
   box.innerHTML = html;
   updateTrainSummary();
@@ -2088,7 +2263,7 @@ function updateTrainSummary() {
   const el = document.getElementById('trainSelected');
   if (!el) return;
   if (selectedTrains.size === 0) { el.innerHTML = '点击上方标签选择今日训练内容'; return; }
-  el.innerHTML = '已选择：<b>' + [...selectedTrains].join('、') + '</b>';
+  el.innerHTML = '已选择：<b>' + [...selectedTrains].map(esc).join('、') + '</b>';
 }
 
 // Enter key in custom input
@@ -2118,7 +2293,7 @@ function selectPoop(p) {
 function saveDailyData() {
   if (!plan || !meals.length) return;
   const today = new Date().toISOString().slice(0, 10);
-  const dailyData = JSON.parse(localStorage.getItem('daily_data') || '{}');
+  const dailyData = safeJSON('daily_data', {});
   dailyData[today] = {
     meals: meals.map((m, mi) => ({
       name: m.name, icon: m.icon,
@@ -2139,7 +2314,7 @@ function getYesterdayData() {
   const yest = new Date();
   yest.setDate(yest.getDate() - 1);
   const yStr = yest.toISOString().slice(0, 10);
-  const dailyData = JSON.parse(localStorage.getItem('daily_data') || '{}');
+  const dailyData = safeJSON('daily_data', {});
   return dailyData[yStr] || null;
 }
 
@@ -2147,13 +2322,15 @@ function getYesterdayData() {
 function adjustWater(ml) {
   water = Math.max(0, water + ml);
   renderWater();
-  saveDailyData();
+  if (plan) updateSummary();
+  else saveDailyData();
 }
 
 function setWater(ml) {
   water = Math.max(0, ml);
   renderWater();
-  saveDailyData();
+  if (plan) updateSummary();
+  else saveDailyData();
 }
 
 function renderWater() {
@@ -2227,12 +2404,6 @@ function renderWeightRecords() {
   document.getElementById('wtPeriod').textContent = '第 ' + Math.ceil(totalDays / 7) + ' 周期';
 }
 
-function deleteWeight(i) {
-  weightRecords.splice(i, 1);
-  localStorage.setItem('wt_records', JSON.stringify(weightRecords));
-  renderWeightRecords();
-}
-
 // ============= EMOJI PICKER =============
 const EMOJI_OPTIONS = [
   '🌱','🌿','🍀','🌸','🌺','🌻','🌼','🌷','🌹','💐',
@@ -2247,13 +2418,13 @@ const EMOJI_OPTIONS = [
   '😊','😎','🥰','😤','💩','👻','🤡','😈','👽','🤖',
 ];
 
-let ckEmojis = JSON.parse(localStorage.getItem('ck_emojis') || '{}');
+let ckEmojis = safeJSON('ck_emojis', {});
 const EMOJI_DEFAULTS = { startW:'🌱', goalW:'🏋️', yestW:'🖼', todayW:'🍊', dayChange:'📏', cumChange:'📉', toGoal:'🎯' };
 let activeEmojiTarget = null;
 
 function getEmoji(key) { return ckEmojis[key] || EMOJI_DEFAULTS[key] || '📍'; }
 
-function openEmojiPicker(el) {
+function openEmojiPicker(el, ev) {
   const picker = document.getElementById('emojiPicker');
   activeEmojiTarget = el;
   const key = el.dataset.key;
@@ -2267,7 +2438,7 @@ function openEmojiPicker(el) {
   picker.style.top = (rect.bottom - panelRect.top + panel.scrollTop + 4) + 'px';
   picker.style.left = '10px';
   picker.classList.add('show');
-  event.stopPropagation();
+  if (ev) ev.stopPropagation();
 }
 
 function pickEmoji(emoji) {
@@ -2291,7 +2462,7 @@ document.addEventListener('click', function(e) {
 // ============= CHECK-IN =============
 let checkinGoalW = parseFloat(localStorage.getItem('ck_goal_w')) || 0;
 let checkinStartW = parseFloat(localStorage.getItem('ck_start_w')) || 0;
-let checkinRecords = JSON.parse(localStorage.getItem('ck_records') || '[]');
+let checkinRecords = safeJSON('ck_records', []);
 
 function openCheckin() {
   const today = new Date();
@@ -2597,7 +2768,7 @@ let histInitialized = false;
 
 function initHistory() {
   const sel = document.getElementById('histMonth');
-  const dailyData = JSON.parse(localStorage.getItem('daily_data') || '{}');
+  const dailyData = safeJSON('daily_data', {});
   const dates = Object.keys(dailyData).sort();
 
   // Collect all months that have data
@@ -2673,7 +2844,7 @@ function loadHistory() {
   updateHistWeekOptions();
   const monthVal = document.getElementById('histMonth').value;
   const weekVal = document.getElementById('histWeek').value;
-  const dailyData = JSON.parse(localStorage.getItem('daily_data') || '{}');
+  const dailyData = safeJSON('daily_data', {});
 
   if (!monthVal) { renderHistEmpty(); return; }
 
