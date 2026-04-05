@@ -390,9 +390,10 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
     /* === DASHBOARD === */
     .dash-card{background:var(--card);margin:10px 12px;border-radius:var(--radius);padding:0;overflow:hidden;
       box-shadow:var(--shadow);border:1px solid rgba(228,232,238,.5)}
-    .dash-top{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px}
-    .dash-cal{font-size:14px;color:var(--sub)}
-    .dash-cal b{font-size:24px;font-weight:800;color:var(--text);margin:0 3px}
+    .dash-top{display:flex;align-items:center;justify-content:space-between;padding:0 0 4px}
+    .dash-top .card-title{margin-bottom:0}
+    .dash-cal-target{font-size:14px;color:var(--sub);padding:0 0 10px}
+    .dash-cal-target b{font-size:22px;font-weight:800;color:var(--text);margin:0 3px}
     .dash-day-badge{padding:5px 16px;border-radius:20px;font-size:12px;font-weight:600;
       border:none}
     .dash-day-badge.high{color:#fff;background:linear-gradient(135deg,#EF5350,#D32F2F);
@@ -401,7 +402,7 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
       box-shadow:0 2px 8px rgba(92,107,192,.3)}
     .dash-day-badge.low{color:#fff;background:linear-gradient(135deg,var(--green),var(--green-dark));
       box-shadow:0 2px 8px rgba(67,185,127,.3)}
-    .dash-macros{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 14px 16px}
+    .dash-macros{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0}
     .dash-macro{border-radius:16px;padding:16px;text-align:left;position:relative;overflow:hidden;display:flex;align-items:flex-start;gap:12px}
     .dm-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
     .dm-content{flex:1;min-width:0}
@@ -921,38 +922,33 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
         <div class="day-selector" id="daySelector"></div>
       </div>
     </div>
-    <!-- Dark Dashboard -->
-    <div class="dash-card fade-in">
+    <!-- Daily Nutrition Targets Dashboard -->
+    <div class="card fade-in">
       <div class="dash-top">
-        <div class="dash-cal">已进食 <b id="dEaten">0</b>/<span id="dTotal">0</span> 大卡</div>
+        <div class="card-title">🍽 每日营养素摄入</div>
         <div class="dash-day-badge" id="dDayBadge">高碳日</div>
       </div>
+      <div class="dash-cal-target">今日目标 <b id="dTotal">0</b> 大卡</div>
       <div class="dash-macros">
         <div class="dash-macro dm-carb">
           <div class="dm-icon">🍞</div>
           <div class="dm-content">
             <div class="dm-label">碳水 (g)</div>
-            <div class="dm-val"><b id="dmCarbC">0</b> / <span id="dmCarbT">0</span></div>
-            <div class="dm-pct" id="dmCarbP">0%</div>
-            <div class="dm-bar"><div class="dm-bar-fill" id="dmCarbBar"></div></div>
+            <div class="dm-val"><b id="dmCarbT">0</b></div>
           </div>
         </div>
         <div class="dash-macro dm-protein">
           <div class="dm-icon">🥩</div>
           <div class="dm-content">
             <div class="dm-label">蛋白 (g)</div>
-            <div class="dm-val"><b id="dmProteinC">0</b> / <span id="dmProteinT">0</span></div>
-            <div class="dm-pct" id="dmProteinP">0%</div>
-            <div class="dm-bar"><div class="dm-bar-fill" id="dmProteinBar"></div></div>
+            <div class="dm-val"><b id="dmProteinT">0</b></div>
           </div>
         </div>
         <div class="dash-macro dm-fat">
           <div class="dm-icon">🥑</div>
           <div class="dm-content">
             <div class="dm-label">脂肪 (g)</div>
-            <div class="dm-val"><b id="dmFatC">0</b> / <span id="dmFatT">0</span></div>
-            <div class="dm-pct" id="dmFatP">0%</div>
-            <div class="dm-bar"><div class="dm-bar-fill" id="dmFatBar"></div></div>
+            <div class="dm-val"><b id="dmFatT">0</b></div>
           </div>
         </div>
         <div class="dash-macro dm-water">
@@ -1713,7 +1709,8 @@ function buildMeals(day) {
     const baseIdx = m.baseIdx;
     selectFood(mi, 'staple', baseIdx===0?6:(baseIdx===1?0:5), true);
     selectFood(mi, 'protein', baseIdx===0?4:(baseIdx===1?0:1), true);
-    if (plan.days[curDay].type === 'low' && baseIdx > 0) selectFood(mi, 'fat', 0, true);
+    // Always select a fat source to meet fat targets (橄榄油 = pure fat, best for accurate allocation)
+    selectFood(mi, 'fat', 2, true);
   });
 }
 
@@ -1742,33 +1739,131 @@ function selectFood(mi, cat, idx, init) {
 
 function recalcWeights(mi) {
   const m = meals[mi];
-  const eggC = eggMacro(mi, 'carb'), eggP = eggMacro(mi, 'protein'), eggF = eggMacro(mi, 'fat');
-  const pwdC = powderMacro(mi, 'carb'), pwdP = powderMacro(mi, 'protein'), pwdF = powderMacro(mi, 'fat');
-  // Remaining targets after egg + powder
-  const remC = Math.max(0, m.targetC - eggC - pwdC);
-  const remP = Math.max(0, m.targetP - eggP - pwdP);
-  const remF = Math.max(0, m.targetF - eggF - pwdF);
-  // Recalc each category
-  const cats = ['staple', 'protein', 'fat'];
-  const targets = { staple: remC, protein: remP, fat: remF };
-  const macroKeys = { staple: 'carb', protein: 'protein', fat: 'fat' };
-  const minMax = { staple: [50, 400], protein: [50, 400], fat: [10, 100] };
-  cats.forEach(cat => {
-    const catFoods = m.foods.filter(f => f._cat === cat);
-    if (!catFoods.length) return;
-    const target = targets[cat];
-    const key = macroKeys[cat];
-    const n = catFoods.length;
-    const share = target / n;
-    catFoods.forEach(f => {
-      const density = f[key];
-      if (density > 0) {
-        let w = Math.round(share / density * 100 * 10) / 10;
-        w = Math.max(minMax[cat][0], Math.min(minMax[cat][1], w));
-        f.weight = Math.round(w * 10) / 10;
-      }
-    });
+  const fixedC = eggMacro(mi,'carb') + powderMacro(mi,'carb');
+  const fixedP = eggMacro(mi,'protein') + powderMacro(mi,'protein');
+  const fixedF = eggMacro(mi,'fat') + powderMacro(mi,'fat');
+  // Veggie contributions are fixed (not optimized)
+  let vegC = 0, vegP = 0, vegF = 0;
+  m.foods.filter(f => f._cat === 'veggie').forEach(f => {
+    vegC += f.carb * f.weight / 100;
+    vegP += f.protein * f.weight / 100;
+    vegF += f.fat * f.weight / 100;
   });
+  const tC = Math.max(0, m.targetC - fixedC - vegC);
+  const tP = Math.max(0, m.targetP - fixedP - vegP);
+  const tF = Math.max(0, m.targetF - fixedF - vegF);
+  const cats = ['staple', 'protein', 'fat'];
+  const minMax = { staple: [30, 500], protein: [30, 500], fat: [5, 100] };
+  // Build average macro profile (per 100g) for each category
+  const catFoods = {};
+  const prof = {};
+  cats.forEach(cat => {
+    const foods = m.foods.filter(f => f._cat === cat);
+    catFoods[cat] = foods;
+    if (!foods.length) { prof[cat] = [0, 0, 0]; return; }
+    prof[cat] = ['carb', 'protein', 'fat'].map(k =>
+      foods.reduce((s, f) => s + f[k], 0) / foods.length);
+  });
+  // Solve 3x3: A * [ws, wp, wf] = [tC, tP, tF] * 100
+  // ws/wp/wf = total weight per category (divided equally among foods)
+  const A = [
+    [prof.staple[0], prof.protein[0], prof.fat[0]],
+    [prof.staple[1], prof.protein[1], prof.fat[1]],
+    [prof.staple[2], prof.protein[2], prof.fat[2]]
+  ];
+  const b = [tC * 100, tP * 100, tF * 100];
+  let sol = solveLinear3(A, b);
+  // If no solution or any weight is very negative, use clamped re-solve
+  if (sol) {
+    // Clamp and re-solve: fix clamped categories, re-solve remaining
+    const clamped = {};
+    cats.forEach((cat, ci) => {
+      if (!catFoods[cat].length) { clamped[ci] = 0; return; }
+      const perFood = sol[ci] / catFoods[cat].length;
+      if (perFood < minMax[cat][0]) clamped[ci] = minMax[cat][0] * catFoods[cat].length;
+      else if (perFood > minMax[cat][1]) clamped[ci] = minMax[cat][1] * catFoods[cat].length;
+    });
+    // If any clamped, subtract their contribution and re-solve the rest
+    if (Object.keys(clamped).length > 0) {
+      const free = [0,1,2].filter(i => !(i in clamped));
+      // Subtract clamped contributions from targets
+      let adjB = [b[0], b[1], b[2]];
+      for (const ci in clamped) {
+        for (let r = 0; r < 3; r++) adjB[r] -= A[r][ci] * clamped[ci];
+      }
+      if (free.length === 2) {
+        // Solve 2 equations (use first 2 relevant rows via least-squares-ish)
+        const i = free[0], j = free[1];
+        // Pick 2 best equations
+        const eq = [[A[0][i], A[0][j], adjB[0]], [A[1][i], A[1][j], adjB[1]], [A[2][i], A[2][j], adjB[2]]];
+        let bestSol = null, bestErr = Infinity;
+        for (let p = 0; p < 3; p++) for (let q = p+1; q < 3; q++) {
+          const det = eq[p][0]*eq[q][1] - eq[p][1]*eq[q][0];
+          if (Math.abs(det) < 1e-10) continue;
+          const wi = (eq[p][2]*eq[q][1] - eq[p][1]*eq[q][2]) / det;
+          const wj = (eq[p][0]*eq[q][2] - eq[p][2]*eq[q][0]) / det;
+          const err = Math.abs(eq[3-p-q][0]*wi + eq[3-p-q][1]*wj - eq[3-p-q][2]);
+          if (wi >= 0 && wj >= 0 && err < bestErr) { bestSol = [wi, wj]; bestErr = err; }
+        }
+        if (bestSol) { sol[i] = bestSol[0]; sol[j] = bestSol[1]; }
+      } else if (free.length === 1) {
+        const i = free[0];
+        // Use the row where A[r][i] is largest
+        let bestR = 0;
+        for (let r = 1; r < 3; r++) if (Math.abs(A[r][i]) > Math.abs(A[bestR][i])) bestR = r;
+        if (Math.abs(A[bestR][i]) > 1e-10) sol[i] = adjB[bestR] / A[bestR][i];
+      }
+      for (const ci in clamped) sol[ci] = clamped[ci];
+    }
+    // Apply weights
+    cats.forEach((cat, ci) => {
+      const foods = catFoods[cat];
+      if (!foods.length) return;
+      const perFood = Math.max(0, sol[ci]) / foods.length;
+      foods.forEach(f => {
+        let w = Math.round(perFood * 10) / 10;
+        w = Math.max(minMax[cat][0], Math.min(minMax[cat][1], w));
+        f.weight = w;
+      });
+    });
+  } else {
+    // Fallback: simple primary-macro allocation
+    const targets = { staple: tC, protein: tP, fat: tF };
+    const keys = { staple: 'carb', protein: 'protein', fat: 'fat' };
+    cats.forEach(cat => {
+      const foods = catFoods[cat];
+      if (!foods.length) return;
+      const share = targets[cat] / foods.length;
+      foods.forEach(f => {
+        const d = f[keys[cat]];
+        let w = d > 0 ? Math.round(share / d * 100 * 10) / 10 : minMax[cat][0];
+        w = Math.max(minMax[cat][0], Math.min(minMax[cat][1], w));
+        f.weight = w;
+      });
+    });
+  }
+}
+// Solve 3x3 linear system Ax=b via Gaussian elimination
+function solveLinear3(A, b) {
+  const M = A.map((row, i) => [...row, b[i]]);
+  for (let col = 0; col < 3; col++) {
+    let maxR = col;
+    for (let r = col+1; r < 3; r++)
+      if (Math.abs(M[r][col]) > Math.abs(M[maxR][col])) maxR = r;
+    [M[col], M[maxR]] = [M[maxR], M[col]];
+    if (Math.abs(M[col][col]) < 1e-10) return null;
+    for (let r = col+1; r < 3; r++) {
+      const f = M[r][col] / M[col][col];
+      for (let j = col; j <= 3; j++) M[r][j] -= f * M[col][j];
+    }
+  }
+  const x = [0, 0, 0];
+  for (let i = 2; i >= 0; i--) {
+    x[i] = M[i][3];
+    for (let j = i+1; j < 3; j++) x[i] -= M[i][j] * x[j];
+    x[i] /= M[i][i];
+  }
+  return x;
 }
 
 function eggMacro(mi, type) {
@@ -1934,26 +2029,10 @@ function updateSummary() {
   tc = Math.round(tc); tp = Math.round(tp); tf = Math.round(tf);
   const eatenCal = Math.round(tc*4 + tp*4 + tf*9);
 
-  // Dashboard update
-  document.getElementById('dEaten').textContent = eatenCal;
-  document.getElementById('dmProteinC').textContent = tp;
-  document.getElementById('dmCarbC').textContent = tc;
-  document.getElementById('dmFatC').textContent = tf;
-
-  const ppct = d.protein > 0 ? Math.min(Math.round(tp/d.protein*100), 999) : 0;
-  const cpct = d.carb > 0 ? Math.min(Math.round(tc/d.carb*100), 999) : 0;
-  const fpct = d.fat > 0 ? Math.min(Math.round(tf/d.fat*100), 999) : 0;
+  // Dashboard: only update water (macros are static targets set in selectDay)
   const wpct = Math.min(Math.round(water / 2500 * 100), 100);
-
-  document.getElementById('dmProteinP').textContent = ppct + '%';
-  document.getElementById('dmCarbP').textContent = cpct + '%';
-  document.getElementById('dmFatP').textContent = fpct + '%';
   document.getElementById('dmWaterC').textContent = water;
   document.getElementById('dmWaterP').textContent = wpct + '%';
-
-  document.getElementById('dmProteinBar').style.width = Math.min(ppct, 100) + '%';
-  document.getElementById('dmCarbBar').style.width = Math.min(cpct, 100) + '%';
-  document.getElementById('dmFatBar').style.width = Math.min(fpct, 100) + '%';
   document.getElementById('dmWaterBar').style.width = Math.min(wpct, 100) + '%';
 
   // Tip bar
