@@ -521,6 +521,13 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
       background:#E8F5E9;color:#2E7D32;border:1px solid #C8E6C9;font-weight:500}
     .veggie-tag.raw{background:#FFF8E1;color:#F57F17;border-color:#FFE082}
 
+    /* === GAP SUMMARY COLLAPSIBLE === */
+    .gap-summary-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;
+      transition:background .15s;border-radius:12px;background:linear-gradient(to right,#EDE7F6,#D1C4E9)}
+    .gap-summary-body{padding:0}
+    .gap-summary-body.hide{display:none}
+    .gap-summary-body .gap-card{margin:10px 12px}
+
     /* === GAP SUMMARY === */
     .gap-card{margin:10px 12px;border-radius:var(--radius);padding:16px 18px;
       box-shadow:var(--shadow);border:1px solid rgba(228,232,238,.3)}
@@ -626,16 +633,21 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
 
     /* === BOTTOM NAV === */
     .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;
-      max-width:430px;background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-      border-top:1px solid rgba(228,232,238,.6);
-      display:flex;justify-content:space-around;padding:8px 0 env(safe-area-inset-bottom,8px);z-index:100}
-    .nav-item{text-align:center;font-size:10px;color:var(--sub);cursor:pointer;flex:1;padding:4px 0;
-      transition:color .2s;font-weight:500;position:relative}
+      max-width:430px;background:rgba(255,255,255,.95);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+      border-top:1px solid rgba(228,232,238,.4);
+      box-shadow:0 -4px 20px rgba(0,0,0,.04);
+      display:flex;justify-content:space-around;padding:6px 0 env(safe-area-inset-bottom,6px);z-index:100}
+    .nav-item{text-align:center;font-size:10px;color:#A0AABB;cursor:pointer;flex:1;padding:6px 0;
+      transition:all .3s cubic-bezier(.4,0,.2,1);font-weight:600;position:relative;letter-spacing:.3px;
+      -webkit-tap-highlight-color:transparent}
     .nav-item.active{color:var(--green)}
-    .nav-item.active::before{content:'';position:absolute;top:-8px;left:50%;transform:translateX(-50%);
-      width:20px;height:3px;background:linear-gradient(135deg,var(--green),var(--green-dark));border-radius:2px}
-    .nav-icon{font-size:20px;margin-bottom:2px;transition:transform .2s}
-    .nav-item.active .nav-icon{transform:scale(1.1)}
+    .nav-item.active::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+      width:24px;height:3px;background:linear-gradient(135deg,var(--green),var(--green-dark));border-radius:0 0 3px 3px}
+    .nav-icon{width:24px;height:24px;margin:0 auto 3px;display:flex;align-items:center;justify-content:center;
+      transition:all .3s cubic-bezier(.4,0,.2,1)}
+    .nav-icon svg{width:22px;height:22px;stroke-width:1.8;fill:none;stroke:currentColor;transition:all .3s}
+    .nav-item.active .nav-icon svg{stroke-width:2.2;filter:drop-shadow(0 1px 3px rgba(67,185,127,.3))}
+    .nav-item.active .nav-icon{transform:translateY(-1px)}
 
     /* === PLAN SELECT MODAL === */
     .plan-card{padding:14px 16px;border:2px solid var(--border);border-radius:14px;
@@ -1121,16 +1133,20 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
       <div class="water-target" id="waterTarget">目标：2500ml</div>
     </div>
 
+    <!-- Gap Summary (collapsible) -->
+    <div class="meal-card fade-in" id="gapSummaryCard" style="display:none">
+      <div class="gap-summary-hd" onclick="toggleGapSummary()">
+        <div class="meal-hd-left"><span>📊</span><h3>营养缺口总览</h3></div>
+        <div id="tipBar" style="display:flex;gap:4px;align-items:center;flex-shrink:0"></div>
+        <span class="meal-arrow" id="gapArrow">▼</span>
+      </div>
+      <div class="gap-summary-body hide" id="gapSummaryBody">
+        <div id="gapSummary"></div>
+      </div>
+    </div>
+
     <!-- Meals -->
     <div id="mealsBox"></div>
-
-    <!-- Gap Summary -->
-    <div id="gapSummary"></div>
-
-    <!-- Tip Bar -->
-    <div class="card fade-in">
-      <div class="tip-bar" id="tipBar">&#x2705; 营养素分配均衡！</div>
-    </div>
 
     <!-- Poop Record -->
     <div class="card fade-in">
@@ -1492,10 +1508,10 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
 
 <!-- Bottom Nav -->
 <div class="bottom-nav">
-  <div class="nav-item active" onclick="switchPage('plan')"><div class="nav-icon">&#x1F3E0;</div>首页</div>
-  <div class="nav-item" onclick="switchPage('weight')"><div class="nav-icon">&#x2696;</div>体重</div>
-  <div class="nav-item" onclick="switchPage('history')"><div class="nav-icon">&#x1F4CA;</div>统计</div>
-  <div class="nav-item" onclick="switchPage('profile')"><div class="nav-icon">&#x1F464;</div>我的</div>
+  <div class="nav-item active" onclick="switchPage('plan')"><div class="nav-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg></div>首页</div>
+  <div class="nav-item" onclick="switchPage('weight')"><div class="nav-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v1m0 16v1m-8-9H3m18 0h-1M5.6 5.6l.7.7m12.1-.7l-.7.7M12 8a4 4 0 100 8 4 4 0 000-8z"/><path d="M12 8v4l2 2"/></svg></div>体重</div>
+  <div class="nav-item" onclick="switchPage('history')"><div class="nav-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 17v-4m4 4V9m4 8v-6m4 6v-2"/></svg></div>统计</div>
+  <div class="nav-item" onclick="switchPage('profile')"><div class="nav-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zm-4 7c-4.42 0-8 1.79-8 4v2h16v-2c0-2.21-3.58-4-8-4z"/></svg></div>我的</div>
 </div>
 
 <script>
@@ -2072,9 +2088,7 @@ function buildMeals(day) {
     if (m.isSnack) return;
     const baseIdx = m.baseIdx;
     selectFood(mi, 'staple', baseIdx===0?6:(baseIdx===1?0:5), true);
-    selectFood(mi, 'protein', baseIdx===0?4:(baseIdx===1?0:1), true);
-    // Always select a fat source to meet fat targets (橄榄油 = pure fat, best for accurate allocation)
-    selectFood(mi, 'fat', 2, true);
+    selectFood(mi, 'protein', baseIdx===0?3:(baseIdx===1?0:2), true);
   });
 }
 
@@ -2378,6 +2392,12 @@ function togglePowder(mi, on) { meals[mi].powderOn = on; recalcWeights(mi); rend
 function setPowderG(mi, v) { meals[mi].powderG = Math.max(0, parseInt(v)||0); recalcWeights(mi); renderMeals(); updateSummary(); }
 function setPowderConc(mi, c) { meals[mi].powderConc = c; recalcWeights(mi); renderMeals(); updateSummary(); }
 function toggleMeal(mi) { meals[mi].expanded = !meals[mi].expanded; renderMeals(); }
+let gapExpanded = false;
+function toggleGapSummary() {
+  gapExpanded = !gapExpanded;
+  document.getElementById('gapSummaryBody').classList.toggle('hide', !gapExpanded);
+  document.getElementById('gapArrow').classList.toggle('open', gapExpanded);
+}
 
 // ============= SUMMARY =============
 function updateSummary() {
@@ -2393,14 +2413,21 @@ function updateSummary() {
   document.getElementById('dmWaterP').textContent = wpct + '%';
   document.getElementById('dmWaterBar').style.width = Math.min(wpct, 100) + '%';
 
-  // Tip bar
-  const tips = [];
+  // Tip bar — compact tags on title row
   const dc = d.carb-tc, dp = d.protein-tp, df = d.fat-tf;
-  if (dp > 10) tips.push('需补充蛋白质'+dp+'g');
-  if (dc > 20) tips.push('碳水还差'+dc+'g');
-  if (df > 5) tips.push('脂肪还差'+df+'g');
-  if (dc < -20) tips.push('碳水超出'+Math.abs(dc)+'g');
-  document.getElementById('tipBar').innerHTML = tips.length ? tips.join(' · ') : '&#x2705; 营养素分配均衡！';
+  const tagStyle = 'font-size:10px;font-weight:600;padding:2px 6px;border-radius:8px;white-space:nowrap;';
+  const tipTags = [];
+  // Protein
+  if (dp > 10) tipTags.push(`<span style="${tagStyle}background:#D1C4E9;color:#4527A0">蛋白-${dp}g</span>`);
+  else tipTags.push(`<span style="${tagStyle}background:#E8F5E9;color:#2E7D32">蛋白✓</span>`);
+  // Carb
+  if (dc > 20) tipTags.push(`<span style="${tagStyle}background:#FFE0B2;color:#E65100">碳水-${dc}g</span>`);
+  else if (dc < -20) tipTags.push(`<span style="${tagStyle}background:#FFCDD2;color:#C62828">碳水+${Math.abs(dc)}g</span>`);
+  else tipTags.push(`<span style="${tagStyle}background:#E8F5E9;color:#2E7D32">碳水✓</span>`);
+  // Fat
+  if (df > 5) tipTags.push(`<span style="${tagStyle}background:#FFF9C4;color:#F57F17">脂肪-${df}g</span>`);
+  else tipTags.push(`<span style="${tagStyle}background:#E8F5E9;color:#2E7D32">脂肪✓</span>`);
+  document.getElementById('tipBar').innerHTML = tipTags.join('');
   renderGapSummary(d, tc, tp, tf);
   saveDailyData();
 }
@@ -2455,33 +2482,6 @@ function renderGapSummary(d, tc, tp, tf) {
 
   let html = '';
 
-  // === Fat gap card ===
-  html += `<div class="gap-card gap-card-fat fade-in">
-    <div class="gap-detail">每日脂肪 ${d.fat}g · 已摄入 ${tf}g · ${df > 0 ? '剩余 '+df+'g' : '超出 '+Math.abs(df)+'g'}</div>
-    ${df > 5 ? `<div class="gap-detail" style="margin-top:4px">建议优先补足全天脂肪净缺口：坚果 ${Math.round(df/0.5)}g（约${df}g脂肪）</div>` : df < -5 ? `<div class="gap-detail" style="margin-top:4px;color:#d32f2f">脂肪已超标，后续餐次注意控制油脂摄入</div>` : ''}
-  </div>`;
-
-  // === Protein gap card ===
-  html += `<div class="gap-card gap-card-protein fade-in">
-    <div class="gap-header">
-      <div class="gap-title">🥤 蛋白粉补充</div>
-      <span class="gap-badge gap-badge-protein">全天净缺口 ${dp > 0 ? dp : 0}g</span>
-    </div>
-    <div class="gap-meal-boxes">
-      ${meals.map((m, mi) => {
-        const consumed = mealP[mi];
-        const target = mealTargetP[mi];
-        const isMax = mi === mealP.indexOf(Math.max(...mealP));
-        return `<div class="gap-meal-box ${isMax ? 'highlight' : ''}">
-          <div class="gap-meal-label">${m.name}</div>
-          <div class="gap-meal-val">${consumed}g</div>
-          <div class="gap-meal-target">/ ${target}g</div>
-        </div>`;
-      }).join('')}
-    </div>
-    ${dp > 0 ? `<div class="gap-suggest">需补充蛋白粉 ${Math.round(dp / 0.76 * 10) / 10}g（按76%浓度）</div>` : `<div class="gap-suggest" style="color:#2E7D32">✅ 蛋白质已达标！</div>`}
-  </div>`;
-
   // === Carb gap card ===
   html += `<div class="gap-card gap-card-carb fade-in">
     <div class="gap-header">
@@ -2491,7 +2491,28 @@ function renderGapSummary(d, tc, tp, tf) {
     ${dc > 5 ? `<div class="gap-detail">建议在后续餐次中适当增加碳水食物，或在加餐中补足</div>` : dc < -10 ? `<div class="gap-detail" style="color:#d32f2f">碳水已超标 ${Math.abs(dc)}g，注意控制主食摄入</div>` : `<div class="gap-detail" style="color:#2E7D32">✅ 碳水摄入均衡</div>`}
   </div>`;
 
+  // === Protein gap card ===
+  html += `<div class="gap-card gap-card-protein fade-in">
+    <div class="gap-header">
+      <div class="gap-title">🥤 蛋白质缺口</div>
+      <span class="gap-badge gap-badge-protein">${dp > 0 ? '全天还差 '+dp+'g 蛋白质' : '蛋白质已达标'}</span>
+    </div>
+    <div class="gap-detail">每日蛋白质 ${d.protein}g · 已摄入 ${tp}g · ${dp > 0 ? '剩余 '+dp+'g' : '超出 '+Math.abs(dp)+'g'}</div>
+    ${dp > 5 ? `<div class="gap-detail" style="margin-top:4px">需补充蛋白粉 ${Math.round(dp / 0.76 * 10) / 10}g（按76%浓度）</div>` : dp < -5 ? `<div class="gap-detail" style="margin-top:4px;color:#d32f2f">蛋白质已超标，注意控制摄入</div>` : `<div class="gap-detail" style="margin-top:4px;color:#2E7D32">✅ 蛋白质已达标！</div>`}
+  </div>`;
+
+  // === Fat gap card ===
+  html += `<div class="gap-card gap-card-fat fade-in">
+    <div class="gap-header">
+      <div class="gap-title">🥜 脂肪缺口</div>
+      <span class="gap-badge gap-badge-fat">${df > 0 ? '全天还差 '+df+'g 脂肪' : '脂肪已达标'}</span>
+    </div>
+    <div class="gap-detail">每日脂肪 ${d.fat}g · 已摄入 ${tf}g · ${df > 0 ? '剩余 '+df+'g' : '超出 '+Math.abs(df)+'g'}</div>
+    ${df > 5 ? `<div class="gap-detail" style="margin-top:4px">建议优先补足全天脂肪净缺口：坚果 ${Math.round(df/0.5)}g（约${df}g脂肪）</div>` : df < -5 ? `<div class="gap-detail" style="margin-top:4px;color:#d32f2f">脂肪已超标，后续餐次注意控制油脂摄入</div>` : ''}
+  </div>`;
+
   document.getElementById('gapSummary').innerHTML = html;
+  document.getElementById('gapSummaryCard').style.display = '';
 }
 
 
