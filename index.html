@@ -1760,10 +1760,10 @@ function updatePlanUI() {
   document.getElementById('bodyTypeGroup').style.display = isTan ? 'none' : '';
   document.getElementById('cycleSection').style.display = isTan ? 'none' : '';
   document.getElementById('tsTrainVolRow').style.display = isTan ? '' : 'none';
-  // Coefficient inputs: readonly for tanSir
+  // Coefficient inputs: always editable (tanSir band sets defaults, user can override)
   ['cfCarb','cfFat','cfProtein'].forEach(id => {
-    document.getElementById(id).readOnly = isTan;
-    document.getElementById(id).style.opacity = isTan ? '0.6' : '1';
+    document.getElementById(id).readOnly = false;
+    document.getElementById(id).style.opacity = '1';
   });
   // Plan page header
   const titleEl = document.getElementById('planTitle');
