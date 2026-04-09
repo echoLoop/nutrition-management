@@ -473,6 +473,8 @@ const FOOD_DB_CATS = [...new Set(FOOD_DB.map(f => f.cat))];
 .fi-input{width:80px;text-align:center;border:2px solid var(--green);border-radius:8px;
       padding:6px 4px;font-size:16px;font-weight:700;background:#fff;transition:border-color .2s;color:var(--green-dark, #2d7a4f)}
     .fi-input:focus{border-color:var(--green);outline:none;box-shadow:0 0 0 3px rgba(67,185,127,.18)}
+    .fi-input.locked{border-color:var(--orange);background:#FFFBF0}
+    .fi-lock{cursor:pointer;font-size:14px;opacity:.7;transition:opacity .2s}.fi-lock:hover{opacity:1}
     .fi-macros{display:flex;gap:10px;font-size:12px;color:#555;font-weight:600}
     .fi-macros span{display:flex;align-items:center;gap:3px}
     .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
@@ -1525,6 +1527,10 @@ function safeJSON(key, fallback) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
   catch(e) { return fallback; }
 }
+function localDateStr(d) {
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
 
 // ============= CONSTANTS =============
 const PLAN_TYPES = {
@@ -2120,9 +2126,9 @@ function recalcWeights(mi) {
   const fixedC = eggMacro(mi,'carb') + powderMacro(mi,'carb');
   const fixedP = eggMacro(mi,'protein') + powderMacro(mi,'protein');
   const fixedF = eggMacro(mi,'fat') + powderMacro(mi,'fat');
-  // Veggie contributions are fixed (not optimized)
+  // Veggie and manually-locked food contributions are fixed (not optimized)
   let vegC = 0, vegP = 0, vegF = 0;
-  m.foods.filter(f => f._cat === 'veggie').forEach(f => {
+  m.foods.filter(f => f._cat === 'veggie' || f._locked).forEach(f => {
     vegC += f.carb * f.weight / 100;
     vegP += f.protein * f.weight / 100;
     vegF += f.fat * f.weight / 100;
@@ -2136,7 +2142,7 @@ function recalcWeights(mi) {
   const catFoods = {};
   const prof = {};
   cats.forEach(cat => {
-    const foods = m.foods.filter(f => f._cat === cat);
+    const foods = m.foods.filter(f => f._cat === cat && !f._locked);
     catFoods[cat] = foods;
     if (!foods.length) { prof[cat] = [0, 0, 0]; return; }
     prof[cat] = ['carb', 'protein', 'fat'].map(k =>
@@ -2315,11 +2321,13 @@ function renderCat(mi, cat, label) {
 
 function renderFoodItem(mi, fi) {
   const f = meals[mi].foods[fi];
+  const locked = f._locked;
   return `<div class="food-item">
     <div class="fi-top">
       <div class="fi-name"><span>${esc(f.emoji)}</span>${esc(f.name)}</div>
       <div class="fi-ctrls">
-        <input class="fi-input" type="number" value="${f.weight}" onchange="setW(${mi},${fi},this.value)" min="0" step="5">
+        ${locked ? `<span class="fi-lock" onclick="unlockW(${mi},${fi})" title="已锁定，点击解锁恢复自动计算">🔒</span>` : ''}
+        <input class="fi-input${locked ? ' locked' : ''}" type="number" value="${f.weight}" onchange="setW(${mi},${fi},this.value)" min="0" step="5">
         <span class="fi-unit">g</span>
       </div>
     </div>
@@ -2332,8 +2340,9 @@ function renderFoodItem(mi, fi) {
   </div>`;
 }
 
-function adj(mi, fi, d) { meals[mi].foods[fi].weight = Math.max(0, meals[mi].foods[fi].weight + d); renderMeals(); updateSummary(); checkNutrientExcess(mi); }
-function setW(mi, fi, v) { meals[mi].foods[fi].weight = Math.max(0, parseInt(v)||0); renderMeals(); updateSummary(); checkNutrientExcess(mi); }
+function adj(mi, fi, d) { const f = meals[mi].foods[fi]; f.weight = Math.max(0, f.weight + d); f._locked = true; renderMeals(); updateSummary(); checkNutrientExcess(mi); }
+function setW(mi, fi, v) { const f = meals[mi].foods[fi]; f.weight = Math.max(0, parseInt(v)||0); f._locked = true; renderMeals(); updateSummary(); checkNutrientExcess(mi); }
+function unlockW(mi, fi) { meals[mi].foods[fi]._locked = false; recalcWeights(mi); renderMeals(); updateSummary(); }
 
 function renderEggPowder(mi) {
   const m = meals[mi];
@@ -2859,7 +2868,7 @@ function selectPoop(p) {
 // ============= DAILY DATA SAVE/LOAD =============
 function saveDailyData() {
   if (!plan || !meals.length) return;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateStr(new Date());
   const dailyData = safeJSON('daily_data', {});
   dailyData[today] = {
     meals: meals.map((m, mi) => ({
@@ -2880,7 +2889,7 @@ function saveDailyData() {
 function getYesterdayData() {
   const yest = new Date();
   yest.setDate(yest.getDate() - 1);
-  const yStr = yest.toISOString().slice(0, 10);
+  const yStr = localDateStr(yest);
   const dailyData = safeJSON('daily_data', {});
   return dailyData[yStr] || null;
 }
@@ -2926,7 +2935,7 @@ function initWater() {
 function addWeight() {
   const v = parseFloat(document.getElementById('wtInput').value);
   if (!v || v < 20 || v > 300) { alert('请输入有效体重'); return; }
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateStr(new Date());
   // check if already recorded today
   const existing = weightRecords.findIndex(r => r.date === today);
   if (existing >= 0) { weightRecords[existing].kg = v; }
@@ -2956,7 +2965,7 @@ function renderWeightRecords() {
       const cls = delta > 0 ? 'up' : (delta < 0 ? 'down' : '');
       changeHtml = `<span class="wt-change ${cls}">${delta > 0 ? '+' : ''}${delta}kg</span>`;
     }
-    const isToday = r.date === new Date().toISOString().slice(0, 10);
+    const isToday = r.date === localDateStr(new Date());
     return `<div class="card ${isToday ? 'wt-input-card' : 'wt-record'}">
       <div class="wt-input-row">
         <div class="wt-date">${r.date} <span class="wt-day-badge">D${dayNum}</span></div>
@@ -3115,7 +3124,7 @@ function closeCheckin() {
 
 function getYesterdayWeight() {
   const yest = new Date(); yest.setDate(yest.getDate() - 1);
-  const yStr = yest.toISOString().slice(0,10);
+  const yStr = localDateStr(yest);
   const rec = weightRecords.find(r => r.date === yStr);
   return rec ? rec.kg : null;
 }
@@ -3213,7 +3222,7 @@ function submitCheckin() {
   // Save today's weight if entered
   const todayW = parseFloat(document.getElementById('ckTodayW').value);
   if (todayW) {
-    const today = new Date().toISOString().slice(0,10);
+    const today = localDateStr(new Date());
     const existing = weightRecords.findIndex(r => r.date === today);
     if (existing >= 0) weightRecords[existing].kg = todayW;
     else weightRecords.unshift({ date: today, kg: todayW });
@@ -3429,7 +3438,7 @@ function loadHistory() {
     for (let i = 0; i < 7; i++) {
       const d = new Date(monday);
       d.setDate(d.getDate() + i);
-      const key = d.toISOString().slice(0, 10);
+      const key = localDateStr(d);
       days.push({ date: d, key, data: dailyData[key] || null });
     }
     weeks.push({ from: new Date(monday), to: sunday, days });
@@ -3647,7 +3656,7 @@ function renderCalendar() {
   const lastDay = new Date(y, m + 1, 0);
   const dailyData = safeJSON('daily_data', {});
   const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
+  const todayStr = localDateStr(today);
   const WDNAMES = ['日','一','二','三','四','五','六'];
   const WDNAMES_FULL = ['周日','周一','周二','周三','周四','周五','周六'];
   const isCarbCycle = currentPlanType === 'carbCycle';
@@ -3660,7 +3669,7 @@ function renderCalendar() {
   if (startDow > 0) {
     for (let i = startDow - 1; i >= 0; i--) {
       const d = new Date(y, m, -i);
-      const key = d.toISOString().slice(0, 10);
+      const key = localDateStr(d);
       cells.push({ day: d.getDate(), date: d, key, isCurrent: false, isToday: key === todayStr, data: dailyData[key] || null });
     }
   }
@@ -3668,7 +3677,7 @@ function renderCalendar() {
   // Current month
   for (let d = 1; d <= lastDay.getDate(); d++) {
     const date = new Date(y, m, d);
-    const key = date.toISOString().slice(0, 10);
+    const key = localDateStr(date);
     cells.push({ day: d, date, key, isCurrent: true, isToday: key === todayStr, data: dailyData[key] || null });
   }
 
@@ -3677,7 +3686,7 @@ function renderCalendar() {
   if (endDow < 6) {
     for (let i = 1; i <= 6 - endDow; i++) {
       const d = new Date(y, m + 1, i);
-      const key = d.toISOString().slice(0, 10);
+      const key = localDateStr(d);
       cells.push({ day: i, date: d, key, isCurrent: false, isToday: key === todayStr, data: dailyData[key] || null });
     }
   }
